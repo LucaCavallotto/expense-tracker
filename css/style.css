@@ -94,3 +94,61 @@ body {
 [data-bs-theme="dark"] .navbar {
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
+
+/* Transaction Tables & Cards */
+.category-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+/* Mobile Flat List Style */
+@media (max-width: 768px) {
+  .transaction-table {
+    display: block;
+    width: 100%;
+    border: none;
+  }
+  .transaction-table thead {
+    display: none; /* Hide headers on mobile */
+  }
+  .transaction-table tbody {
+    display: flex;
+    flex-direction: column;
+  }
+  .transaction-table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    background-color: var(--bs-body-bg);
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    position: relative;
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    transition: background-color 0.2s ease;
+  }
+  .transaction-table tr:active {
+    background-color: rgba(0,0,0,0.05);
+  }
+  [data-bs-theme="dark"] .transaction-table tr {
+    background-color: transparent;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: none;
+  }
+  .transaction-table td {
+    display: block;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .transaction-table td:not(.mobile-visible) {
+    display: none;
+  }
+}

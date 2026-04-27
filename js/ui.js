@@ -1,6 +1,35 @@
 import { state, markUnsavedChanges } from './app.js';
 import { renderAnalytics } from './analytics.js';
 
+const categoryMap = {
+  'food': { icon: 'bi-cup-hot-fill', color: 'bg-danger' },
+  'dining': { icon: 'bi-shop', color: 'bg-danger' },
+  'restaurant': { icon: 'bi-shop', color: 'bg-danger' },
+  'rent': { icon: 'bi-house-fill', color: 'bg-warning text-dark' }, 
+  'housing': { icon: 'bi-house-fill', color: 'bg-warning text-dark' },
+  'phone': { icon: 'bi-telephone-fill', color: 'bg-primary' },
+  'utilities': { icon: 'bi-lightning-charge-fill', color: 'bg-primary' },
+  'transport': { icon: 'bi-car-front-fill', color: 'bg-success' },
+  'entertainment': { icon: 'bi-film', color: 'text-bg-secondary' },
+  'shopping': { icon: 'bi-bag-fill', color: 'bg-danger' },
+  'health': { icon: 'bi-heart-pulse-fill', color: 'bg-danger' },
+  'kids': { icon: 'bi-person-hearts', color: 'bg-info' },
+  'insurance': { icon: 'bi-shield-fill-check', color: 'bg-warning text-dark' }, /* Based on image "Assicurazione" is orange */
+  'software': { icon: 'bi-laptop', color: 'bg-primary' },
+  'default': { icon: 'bi-receipt-cutoff', color: 'bg-secondary' }
+};
+
+function getCategoryMeta(category) {
+  if (!category) return categoryMap['default'];
+  const lower = category.toLowerCase();
+  for (const key in categoryMap) {
+    if (lower.includes(key)) return categoryMap[key];
+  }
+  const colors = ['bg-primary', 'bg-success', 'bg-danger', 'bg-warning text-dark', 'bg-info', 'bg-secondary'];
+  const hash = category.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return { icon: 'bi-tag-fill', color: colors[hash % colors.length] };
+}
+
 let expenseModalInstance = null;
 
 /**
@@ -17,6 +46,17 @@ export function setupUIEvents() {
   const expenseForm = document.getElementById('expenseForm');
   if (expenseForm) {
     expenseForm.addEventListener('submit', handleTransactionSubmit);
+  }
+  
+  const btnDelete = document.getElementById('btnDeleteTransactionModal');
+  if (btnDelete) {
+    btnDelete.addEventListener('click', () => {
+      const id = document.getElementById('editTransactionId').value;
+      if (id) {
+        deleteTransaction(id);
+        if (expenseModalInstance) expenseModalInstance.hide();
+      }
+    });
   }
   
   const inputCategory = document.getElementById('inputCategory');
@@ -124,6 +164,9 @@ function resetForm() {
   document.getElementById('editTransactionId').value = '';
   document.getElementById('expenseModalLabel').textContent = 'Add Transaction';
   document.getElementById('inputSubcategory').innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
+  
+  const btnDelete = document.getElementById('btnDeleteTransactionModal');
+  if (btnDelete) btnDelete.classList.add('d-none');
 }
 
 function renderHomeSection() {
@@ -150,21 +193,49 @@ function renderHomeSection() {
     homeRecentTbody.innerHTML = '';
     const recent = state.transactions.slice(0, 5);
     
-    recent.forEach(t => {
+    recent.forEach((t, i) => {
       const tr = document.createElement('tr');
       const isIncome = t.Amount >= 0;
-      const amountStr = isIncome ? `+€${t.Amount.toFixed(2)}` : `-€${Math.abs(t.Amount).toFixed(2)}`;
+      const amountStr = isIncome ? `${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
+      const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
+      const meta = getCategoryMeta(t.Category);
+      
+      tr.className = 'mobile-row-click';
+      tr.setAttribute('data-id', t.id);
       
       tr.innerHTML = `
-        <td><small class="text-muted">${formatDate(t.Date)}</small></td>
-        <td>${t.Description}</td>
-        <td class="text-end ${isIncome ? 'text-success' : 'text-danger'}">${amountStr}</td>
+        <td class="mobile-visible w-100 p-0 border-0">
+          <div class="d-flex align-items-center w-100 p-3">
+            <div style="width: 50px;">
+              <div class="category-icon shadow-sm ${meta.color} position-relative">
+                <i class="bi ${meta.icon}"></i>
+                <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1" style="width: 14px; height: 14px; transform: translate(25%, 25%);">
+                   <i class="bi bi-check text-white d-flex align-items-center justify-content-center" style="font-size: 8px; line-height: 1;"></i>
+                </span>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+              <div class="fw-bold" style="font-size: 1.05rem;">${t.Description}</div>
+              <div class="text-muted small">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
+              ${t.Notes ? `<div class="text-muted small">${t.Notes}</div>` : ''}
+            </div>
+            <div class="text-end">
+              <div class="${amountClass}" style="font-size: 1.1rem;">${amountStr}</div>
+              <div class="text-muted small mt-1">${formatDate(t.Date)}</div>
+            </div>
+          </div>
+        </td>
       `;
       homeRecentTbody.appendChild(tr);
     });
     
+    // Attach click listeners
+    homeRecentTbody.querySelectorAll('.mobile-row-click').forEach(row => {
+      row.addEventListener('click', () => editTransaction(row.getAttribute('data-id')));
+    });
+    
     if (recent.length === 0) {
-      homeRecentTbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No transactions yet</td></tr>';
+      homeRecentTbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3 mobile-visible">No transactions yet</td></tr>';
     }
   }
 }
@@ -209,36 +280,92 @@ export function renderTransactions() {
 
   tbody.innerHTML = '';
   
+  let lastDate = null;
+  const isDateSorted = state.sort.column === 'Date';
+  
   // Build and insert DOM rows
-  sorted.forEach(t => {
+  sorted.forEach((t, i) => {
+    if (isDateSorted && t.Date !== lastDate) {
+      const headerTr = document.createElement('tr');
+      headerTr.className = 'date-header-row d-md-none bg-transparent';
+      headerTr.innerHTML = `
+        <td colspan="8" class="p-3 pb-1 text-muted fw-bold small text-uppercase w-100 border-0" style="background: transparent;">
+          ${formatDate(t.Date)}
+        </td>
+      `;
+      tbody.appendChild(headerTr);
+      lastDate = t.Date;
+    }
+
     const tr = document.createElement('tr');
+    tr.className = 'mobile-row-click';
+    tr.setAttribute('data-id', t.id);
     
     const isIncome = t.Amount >= 0;
-    const amountStr = isIncome ? `+€${t.Amount.toFixed(2)}` : `-€${Math.abs(t.Amount).toFixed(2)}`;
+    const amountStr = isIncome ? `${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
     const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
+    const meta = getCategoryMeta(t.Category);
     
     tr.innerHTML = `
-      <td>${formatDate(t.Date)}</td>
-      <td class="${amountClass}">${amountStr}</td>
-      <td>${t.Description}</td>
-      <td><span class="badge bg-secondary">${t.Category}</span></td>
-      <td>${t.Subcategory}</td>
-      <td>${t.Tags}</td>
-      <td>${t.Notes}</td>
-      <td class="text-end">
+      <!-- Desktop Layout -->
+      <td class="d-none d-md-table-cell">${formatDate(t.Date)}</td>
+      <td class="d-none d-md-table-cell ${amountClass}">${amountStr}</td>
+      <td class="d-none d-md-table-cell">${t.Description}</td>
+      <td class="d-none d-md-table-cell"><span class="badge bg-secondary">${t.Category}</span></td>
+      <td class="d-none d-md-table-cell">${t.Subcategory}</td>
+      <td class="d-none d-md-table-cell">${t.Tags}</td>
+      <td class="d-none d-md-table-cell">${t.Notes}</td>
+      <td class="d-none d-md-table-cell text-end">
         <button class="btn btn-sm btn-outline-primary me-1 btn-edit" data-id="${t.id}">Edit</button>
         <button class="btn btn-sm btn-outline-danger btn-del" data-id="${t.id}">Del</button>
+      </td>
+      
+      <!-- Mobile Layout -->
+      <td class="d-md-none mobile-visible w-100 p-0 border-0">
+        <div class="d-flex align-items-center w-100 p-3">
+          <div style="width: 50px;">
+            <div class="category-icon shadow-sm ${meta.color} position-relative">
+              <i class="bi ${meta.icon}"></i>
+              <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1" style="width: 14px; height: 14px; transform: translate(25%, 25%);">
+                 <i class="bi bi-check text-white d-flex align-items-center justify-content-center" style="font-size: 8px; line-height: 1;"></i>
+              </span>
+            </div>
+          </div>
+          <div class="flex-grow-1 ms-3">
+            <div class="fw-bold" style="font-size: 1.05rem;">${t.Description}</div>
+            <div class="text-muted small">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
+            ${t.Notes ? `<div class="text-muted small">${t.Notes}</div>` : ''}
+          </div>
+          <div class="text-end">
+            <div class="${amountClass}" style="font-size: 1.1rem;">${amountStr}</div>
+            <div class="text-muted small mt-1">18:00</div>
+          </div>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
   });
   
+  // Mobile row click
+  tbody.querySelectorAll('.mobile-row-click').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('button')) return; // Ignore if clicking a button inside (like desktop edit/del)
+      editTransaction(row.getAttribute('data-id'));
+    });
+  });
+  
   // Attach inline edit/delete listeners dynamically safely
   tbody.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', () => editTransaction(btn.getAttribute('data-id')));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editTransaction(btn.getAttribute('data-id'));
+    });
   });
   tbody.querySelectorAll('.btn-del').forEach(btn => {
-    btn.addEventListener('click', () => deleteTransaction(btn.getAttribute('data-id')));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteTransaction(btn.getAttribute('data-id'));
+    });
   });
   
   // Cascade update to Analytics when data changes
@@ -266,6 +393,10 @@ function editTransaction(id) {
   document.getElementById('inputNotes').value = t.Notes;
   
   document.getElementById('expenseModalLabel').textContent = 'Edit Transaction';
+  
+  const btnDelete = document.getElementById('btnDeleteTransactionModal');
+  if (btnDelete) btnDelete.classList.remove('d-none');
+  
   if (expenseModalInstance) expenseModalInstance.show();
 }
 
