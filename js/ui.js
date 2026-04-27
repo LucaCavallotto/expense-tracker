@@ -225,10 +225,10 @@ function renderHomeSection() {
     homeRecentTbody.innerHTML = '';
     const recent = state.transactions.slice(0, 5);
     
-    recent.forEach((t, i) => {
+    recent.forEach((t) => {
       const tr = document.createElement('tr');
       const isIncome = t.Amount >= 0;
-      const amountStr = isIncome ? `${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
+      const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
       const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
       const meta = getCategoryMeta(t.Category);
       
@@ -236,7 +236,13 @@ function renderHomeSection() {
       tr.setAttribute('data-id', t.id);
       
       tr.innerHTML = `
-        <td class="mobile-visible w-100 p-0 border-0">
+        <!-- Desktop Layout -->
+        <td class="d-none d-md-table-cell"><small class="text-muted">${formatDate(t.Date)}</small></td>
+        <td class="d-none d-md-table-cell">${t.Description}</td>
+        <td class="text-end d-none d-md-table-cell ${amountClass}">${amountStr}</td>
+        
+        <!-- Mobile Layout -->
+        <td class="d-md-none mobile-visible w-100 p-0 border-0">
           <div class="d-flex align-items-center w-100 p-3">
             <div style="width: 50px;">
               <div class="category-icon shadow-sm ${meta.color} position-relative">
@@ -316,7 +322,7 @@ export function renderTransactions() {
   const isDateSorted = state.sort.column === 'Date';
   
   // Build and insert DOM rows
-  sorted.forEach((t, i) => {
+  sorted.forEach((t) => {
     if (isDateSorted && t.Date !== lastDate) {
       const headerTr = document.createElement('tr');
       headerTr.className = 'date-header-row d-md-none bg-transparent';
@@ -334,7 +340,7 @@ export function renderTransactions() {
     tr.setAttribute('data-id', t.id);
     
     const isIncome = t.Amount >= 0;
-    const amountStr = isIncome ? `${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
+    const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
     const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
     const meta = getCategoryMeta(t.Category);
     
@@ -343,11 +349,11 @@ export function renderTransactions() {
       <td class="d-none d-md-table-cell">${formatDate(t.Date)}</td>
       <td class="d-none d-md-table-cell ${amountClass}">${amountStr}</td>
       <td class="d-none d-md-table-cell">${t.Description}</td>
-      <td class="d-none d-md-table-cell"><span class="badge bg-secondary">${t.Category}</span></td>
-      <td class="d-none d-md-table-cell">${t.Subcategory}</td>
-      <td class="d-none d-md-table-cell">${t.Tags}</td>
-      <td class="d-none d-md-table-cell">${t.Notes}</td>
-      <td class="d-none d-md-table-cell text-end">
+      <td class="d-none d-lg-table-cell"><span class="badge bg-secondary">${t.Category || 'Uncategorized'}</span></td>
+      <td class="d-none d-lg-table-cell">${t.Subcategory}</td>
+      <td class="d-none d-xl-table-cell">${t.Tags}</td>
+      <td class="d-none d-xl-table-cell">${t.Notes}</td>
+      <td class="text-end text-nowrap d-none d-md-table-cell">
         <button class="btn btn-sm btn-outline-primary me-1 btn-edit" data-id="${t.id}">Edit</button>
         <button class="btn btn-sm btn-outline-danger btn-del" data-id="${t.id}">Del</button>
       </td>
