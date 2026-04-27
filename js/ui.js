@@ -48,6 +48,37 @@ export function setupUIEvents() {
     expenseForm.addEventListener('submit', handleTransactionSubmit);
   }
   
+  const inlineInput = document.getElementById('inlineInput');
+  if (inlineInput) {
+    inlineInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      if (!val) return;
+      const parts = val.split(',').map(p => p.trim());
+      
+      if (parts.length > 0 && parts[0]) {
+        const dateMatch = parts[0].match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (dateMatch) {
+          const day = dateMatch[1].padStart(2, '0');
+          const month = dateMatch[2].padStart(2, '0');
+          const year = dateMatch[3];
+          document.getElementById('inputDate').value = `${year}-${month}-${day}`;
+        }
+      }
+      
+      if (parts.length > 1 && parts[1]) {
+        let amountStr = parts[1].replace(',', '.').replace(/[^\d\.\+\-]/g, '');
+        const amountFloat = parseFloat(amountStr);
+        if (!isNaN(amountFloat)) {
+          document.getElementById('inputAmount').value = amountFloat;
+        }
+      }
+      
+      if (parts.length > 2 && parts[2]) {
+        document.getElementById('inputDescription').value = parts.slice(2).join(', ');
+      }
+    });
+  }
+  
   const btnDelete = document.getElementById('btnDeleteTransactionModal');
   if (btnDelete) {
     btnDelete.addEventListener('click', () => {
@@ -162,6 +193,7 @@ function handleCategoryChange(e) {
 function resetForm() {
   document.getElementById('expenseForm').reset();
   document.getElementById('editTransactionId').value = '';
+  document.getElementById('inlineInput').value = '';
   document.getElementById('expenseModalLabel').textContent = 'Add Transaction';
   document.getElementById('inputSubcategory').innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
   
@@ -421,7 +453,7 @@ function handleTransactionSubmit(e) {
   const DateVal = document.getElementById('inputDate').value;
   const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
   const Description = document.getElementById('inputDescription').value;
-  const Category = document.getElementById('inputCategory').value;
+  const Category = document.getElementById('inputCategory').value || 'Uncategorized';
   const Subcategory = document.getElementById('inputSubcategory').value || '';
   const Tags = document.getElementById('inputTags').value;
   const Notes = document.getElementById('inputNotes').value;
