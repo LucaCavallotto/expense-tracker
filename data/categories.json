@@ -1,0 +1,92 @@
+{
+  "Income": [
+    "Salary",
+    "Freelance",
+    "Family",
+    "Gift",
+    "Sales",
+    "Reimbursement"
+  ],
+  "Food": [
+    "Restaurant",
+    "Delivery & Takeaway",
+    "Canteen"
+  ],
+  "Bar": [
+    "Coffee & Snacks",
+    "Drinks"
+  ],
+  "Mixed": [
+    "Expenses"
+  ],
+  "Shopping": [
+    "Clothes & Accessories",
+    "Shoes",
+    "Electronics & Gadgets",
+    "Software",
+    "Home",
+    "Gifts to Buy"
+  ],
+  "Transportation": [
+    "Taxi",
+    "Public Transport",
+    "Trains",
+    "Buses",
+    "Ships",
+    "Airline",
+    "Rentals"
+  ],
+  "Vehicle": [
+    "Car Payment & Lease",
+    "Fuel",
+    "Insurance & Tax",
+    "Maintenance",
+    "Parking",
+    "Toll Booths"
+  ],
+  "Entertainment": [
+    "Books/Music/Subscriptions",
+    "Films/Concerts/Museums/Events",
+    "Clubs",
+    "Parties",
+    "Hobbies",
+    "Travel",
+    "Other"
+  ],
+  "Health & Care": [
+    "Medical Expenses",
+    "Medicines",
+    "Treatments",
+    "Hair Care",
+    "Beauty Care"
+  ],
+  "Sports": [
+    "Running",
+    "Tennis",
+    "Other Sports"
+  ],
+  "Bills": [
+    "Phone & Internet",
+    "Subscription"
+  ],
+  "Taxes": [
+    "Tax Expenses"
+  ],
+  "Insurance": [
+    "Insurance Expenses"
+  ],
+  "Fines": [
+    "Fine Expenses"
+  ],
+  "Investments": [
+    "Security",
+    "Interest",
+    "Other"
+  ],
+  "Other": [
+    "Uncategorized",
+    "One-off",
+    "Missing",
+    "Debts & Credits"
+  ]
+}

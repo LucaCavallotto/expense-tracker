@@ -1,0 +1,96 @@
+:root {
+  --primary-accent: #1b7a38;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Accent Color Overrides */
+.btn-primary {
+  background-color: var(--primary-accent);
+  border-color: var(--primary-accent);
+  color: #fff;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+  background-color: #145929 !important;
+  border-color: #145929 !important;
+  color: #fff;
+}
+
+.btn-outline-primary {
+  color: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+
+.btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active {
+  background-color: var(--primary-accent) !important;
+  border-color: var(--primary-accent) !important;
+  color: #fff !important;
+}
+
+.text-primary {
+  color: var(--primary-accent) !important;
+}
+
+.border-primary {
+  border-color: var(--primary-accent) !important;
+}
+
+.nav-tabs .nav-link {
+  color: #6c757d;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--primary-accent) !important;
+  border-bottom-color: transparent;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+  color: #28a745 !important; /* Lighter green for dark mode contrast */
+}
+
+/* Drag & Drop Area */
+.drop-zone {
+  border: 2px dashed #6c757d;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--primary-accent);
+  background-color: rgba(27, 122, 56, 0.05);
+}
+
+[data-bs-theme="dark"] .drop-zone {
+  border-color: #495057;
+}
+
+[data-bs-theme="dark"] .drop-zone:hover, [data-bs-theme="dark"] .drop-zone.dragover {
+  border-color: #28a745;
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* Sortable Headers */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="light"] .sortable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Miscellaneous */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+[data-bs-theme="dark"] .navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}

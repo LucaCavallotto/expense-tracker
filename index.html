@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <!-- Custom CSS -->
+  <link href="css/style.css" rel="stylesheet">
+  
+  <!-- Set theme early to avoid flash -->
+  <script>
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+      document.documentElement.setAttribute('data-bs-theme', event.matches ? 'dark' : 'light');
+    });
+  </script>
+</head>
+<body>
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary border-bottom">
+    <div class="container-fluid px-4">
+      <span class="navbar-brand text-primary fw-bold">Expense Tracker</span>
+      
+      <div class="d-flex align-items-center flex-grow-1 justify-content-center">
+        <span id="currentFileName" class="text-muted fw-semibold">No file opened</span>
+      </div>
+      
+      <div id="navActions" class="d-none">
+        <button id="btnUndoChanges" class="btn btn-outline-secondary btn-sm me-2" disabled>Undo Changes</button>
+        <button id="btnSaveChanges" class="btn btn-outline-primary btn-sm me-2">Save Changes</button>
+        <button id="btnCloseFile" class="btn btn-outline-danger btn-sm">Close File</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Landing View -->
+  <div id="landingView" class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 text-center">
+        <h2 class="mb-4">Welcome to Personal Expense Tracker</h2>
+        <p class="text-muted mb-5">Manage your personal finances efficiently directly in your browser. All data stays local.</p>
+        
+        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+          <button id="btnCreateNewFile" class="btn btn-primary btn-lg px-4 gap-3">Create New File</button>
+        </div>
+
+        <div class="mt-5">
+          <p class="text-muted mb-3">Or open an existing CSV file</p>
+          <div id="dropZone" class="drop-zone p-5 mb-4 bg-body-tertiary rounded-3 border">
+            <h5 class="mb-3">Drag & Drop your CSV file here</h5>
+            <p class="text-muted mb-4">- or -</p>
+            <button id="btnOpenFile" class="btn btn-outline-primary">Browse Files</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App View -->
+  <div id="appView" class="container-fluid mt-4 d-none">
+    
+    <!-- Unsaved changes alert -->
+    <div id="unsavedWarning" class="alert alert-warning d-none" role="alert">
+      You have unsaved changes! Don't forget to click "Save Changes" before leaving.
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4 px-3" id="appTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-semibold" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Home</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-tab-pane" type="button" role="tab" aria-controls="list-tab-pane" aria-selected="false">Transactions</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics-tab-pane" type="button" role="tab" aria-controls="analytics-tab-pane" aria-selected="false">Analytics</button>
+      </li>
+    </ul>
+
+    <div class="tab-content px-3" id="appTabsContent">
+      
+      <!-- Home Tab -->
+      <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
+        <div class="row">
+          <!-- Net Delta Summary -->
+          <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-body text-center">
+                <h5 class="card-title text-muted">Current Net Delta</h5>
+                <h2 id="homeMetricDelta" class="fw-bold my-3">€0.00</h2>
+                <button class="btn btn-link text-primary p-0" id="linkToAnalytics">View Detailed Analytics →</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Recent Transactions -->
+          <div class="col-md-8 mb-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Transactions</h5>
+                <button class="btn btn-link text-primary p-0" id="linkToTransactions">View All →</button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <tbody id="homeRecentTbody">
+                      <!-- Populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions Tab -->
+      <div class="tab-pane fade" id="list-tab-pane" role="tabpanel" aria-labelledby="list-tab" tabindex="0">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4>Transaction List</h4>
+          <button id="btnAddExpense" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#expenseModal">
+            + Add Expense
+          </button>
+        </div>
+        
+        <div class="table-responsive bg-body rounded shadow-sm">
+          <table class="table table-hover table-striped align-middle mb-0" id="transactionsTable">
+            <thead class="table-dark">
+              <tr>
+                <th scope="col" class="sortable" data-sort="Date">Date ↕</th>
+                <th scope="col" class="sortable" data-sort="Amount">Amount ↕</th>
+                <th scope="col">Description</th>
+                <th scope="col" class="sortable" data-sort="Category">Category ↕</th>
+                <th scope="col">Subcategory</th>
+                <th scope="col">Tags</th>
+                <th scope="col">Notes</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsTbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="text-center py-5 d-none text-muted">
+          No transactions found. Add one to get started!
+        </div>
+      </div>
+
+      <!-- Analytics Tab -->
+      <div class="tab-pane fade" id="analytics-tab-pane" role="tabpanel" aria-labelledby="analytics-tab" tabindex="0">
+        <div class="row mb-4">
+          <div class="col-md-4">
+            <div class="card text-center shadow-sm h-100 border-success">
+              <div class="card-body">
+                <h5 class="card-title text-success">Total Income</h5>
+                <h2 class="card-text fw-bold" id="metricIncome">$0.00</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mt-3 mt-md-0">
+            <div class="card text-center shadow-sm h-100 border-danger">
+              <div class="card-body">
+                <h5 class="card-title text-danger">Total Expenses</h5>
+                <h2 class="card-text fw-bold" id="metricExpenses">$0.00</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mt-3 mt-md-0">
+            <div class="card text-center shadow-sm h-100 border-primary">
+              <div class="card-body">
+                <h5 class="card-title text-primary">Net Delta</h5>
+                <h2 class="card-text fw-bold" id="metricDelta">$0.00</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-transparent border-bottom-0">
+                <h5 class="card-title mb-0">Expenses by Category</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="categoryPieChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-transparent border-bottom-0">
+                <h5 class="card-title mb-0">Income vs Expenses Overview</h5>
+              </div>
+              <div class="card-body">
+                <canvas id="incomeVsExpenseChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Expense Modal (Add/Edit) -->
+  <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="expenseModalLabel">Add Transaction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="expenseForm">
+            <input type="hidden" id="editTransactionId" value="">
+            
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="inputDate" class="form-label">Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="inputDate" required>
+              </div>
+              <div class="col-md-6">
+                <label for="inputAmount" class="form-label">Amount <span class="text-danger">*</span></label>
+                <input type="number" step="0.01" class="form-control" id="inputAmount" placeholder="e.g. 50.00 or -50.00" required>
+                <div class="form-text">Use positive for Income, negative for Expense.</div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="inputDescription" class="form-label">Description <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="inputDescription" placeholder="e.g. Weekly Groceries" required>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label for="inputCategory" class="form-label">Category <span class="text-danger">*</span></label>
+                <select id="inputCategory" class="form-select" required>
+                  <option value="" disabled selected>Select Category</option>
+                  <!-- Dynamically loaded -->
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="inputSubcategory" class="form-label">Subcategory</label>
+                <select id="inputSubcategory" class="form-select">
+                  <option value="" disabled selected>Select Subcategory</option>
+                  <!-- Dynamically populated based on Category -->
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="inputTags" class="form-label">Tags</label>
+              <input type="text" class="form-control" id="inputTags" placeholder="Comma separated, e.g. urgent, business">
+            </div>
+
+            <div class="mb-3">
+              <label for="inputNotes" class="form-label">Notes</label>
+              <textarea class="form-control" id="inputNotes" rows="2" placeholder="Additional details..."></textarea>
+            </div>
+            
+            <div class="text-end mt-4">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary" id="btnSaveTransaction">Save Transaction</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PapaParse, Chart.js, Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+  <!-- Application Logic -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
