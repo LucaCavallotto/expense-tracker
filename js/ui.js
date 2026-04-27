@@ -223,7 +223,9 @@ function renderHomeSection() {
   // Render first 5 transactions
   if (homeRecentTbody) {
     homeRecentTbody.innerHTML = '';
-    const recent = state.transactions.slice(0, 5);
+    const recent = [...state.transactions]
+      .sort((a, b) => new Date(b.Date) - new Date(a.Date))
+      .slice(0, 5);
     
     recent.forEach((t) => {
       const tr = document.createElement('tr');

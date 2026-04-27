@@ -21,11 +21,13 @@ export function renderAnalytics() {
       const absAmt = Math.abs(t.Amount);
       totalExpenses += absAmt;
       
-      // Categorize for pie chart
-      if (categoryExpenses[t.Category]) {
-        categoryExpenses[t.Category] += absAmt;
-      } else {
-        categoryExpenses[t.Category] = absAmt;
+      // Categorize for pie chart - skip if category is empty
+      if (t.Category && t.Category.trim()) {
+        if (categoryExpenses[t.Category]) {
+          categoryExpenses[t.Category] += absAmt;
+        } else {
+          categoryExpenses[t.Category] = absAmt;
+        }
       }
     }
   });
@@ -56,8 +58,14 @@ export function renderAnalytics() {
  */
 function updatePieChart(categoryExpenses) {
   const ctx = document.getElementById('categoryPieChart').getContext('2d');
-  const labels = Object.keys(categoryExpenses);
-  const data = Object.values(categoryExpenses);
+  
+  // Sort categories by amount descending and take the top 5
+  const topCategories = Object.entries(categoryExpenses)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5);
+    
+  const labels = topCategories.map(([cat]) => cat);
+  const data = topCategories.map(([, amt]) => amt);
   
   if (pieChartInstance) {
     pieChartInstance.destroy();
