@@ -5,7 +5,8 @@ export const state = {
   originalTransactions: [], // To support Undo
   hasUnsavedChanges: false,
   categories: {},
-  sort: { column: 'Date', direction: 'desc' }
+  sort: { column: 'Date', direction: 'desc' },
+  searchQuery: ''
 };
 
 export function markUnsavedChanges() {

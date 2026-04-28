@@ -251,6 +251,7 @@ function closeFile() {
   state.fileName = '';
   state.transactions = [];
   state.originalTransactions = [];
+  state.searchQuery = '';
   clearUnsavedChanges();
   renderApp();
 }

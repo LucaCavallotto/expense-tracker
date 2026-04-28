@@ -124,6 +124,24 @@ export function setupUIEvents() {
       renderTransactions();
     });
   });
+
+  const inputSearchTransaction = document.getElementById('inputSearchTransaction');
+  const btnClearSearch = document.getElementById('btnClearSearch');
+  if (inputSearchTransaction && btnClearSearch) {
+    inputSearchTransaction.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value.trim().toLowerCase();
+      btnClearSearch.classList.toggle('d-none', !e.target.value);
+      renderTransactions();
+    });
+
+    btnClearSearch.addEventListener('click', () => {
+      inputSearchTransaction.value = '';
+      state.searchQuery = '';
+      btnClearSearch.classList.add('d-none');
+      inputSearchTransaction.focus();
+      renderTransactions();
+    });
+  }
 }
 
 /**
@@ -151,6 +169,12 @@ export function renderApp() {
     appView.classList.add('d-none');
     navActions.classList.add('d-none');
     currentFileName.textContent = 'No file opened';
+    
+    // Clear search input on close
+    const inputSearch = document.getElementById('inputSearchTransaction');
+    if (inputSearch) inputSearch.value = '';
+    const btnClear = document.getElementById('btnClearSearch');
+    if (btnClear) btnClear.classList.add('d-none');
   }
 }
 
@@ -294,7 +318,14 @@ export function renderTransactions() {
   const emptyState = document.getElementById('emptyState');
   const tableContainer = document.getElementById('transactionsTable').parentElement;
   
-  if (state.transactions.length === 0) {
+  let filteredTransactions = state.transactions;
+  if (state.searchQuery) {
+    filteredTransactions = state.transactions.filter(t => 
+      t.Description.toLowerCase().includes(state.searchQuery)
+    );
+  }
+
+  if (filteredTransactions.length === 0) {
     tableContainer.classList.add('d-none');
     emptyState.classList.remove('d-none');
   } else {
@@ -303,7 +334,7 @@ export function renderTransactions() {
   }
   
   // Copy and sort the data based on current state parameters
-  const sorted = [...state.transactions].sort((a, b) => {
+  const sorted = [...filteredTransactions].sort((a, b) => {
     const col = state.sort.column;
     const dir = state.sort.direction === 'asc' ? 1 : -1;
     
