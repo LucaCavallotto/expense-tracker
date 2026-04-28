@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Expense Tracker</title>
-  
+
   <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    crossorigin="anonymous">
+
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  
+
   <!-- Custom CSS -->
   <link href="assets/css/style.css" rel="stylesheet">
-  
+
   <!-- Set theme early to avoid flash -->
   <script>
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -24,9 +26,12 @@
     });
   </script>
 </head>
+
 <body>
   <!-- Global Drag & Drop Overlay -->
-  <div id="globalDropOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-body bg-opacity-75 d-flex align-items-center justify-content-center" style="z-index: 9999; border: 4px dashed var(--primary-accent);">
+  <div id="globalDropOverlay"
+    class="d-none position-fixed top-0 start-0 w-100 h-100 bg-body bg-opacity-75 d-flex align-items-center justify-content-center"
+    style="z-index: 9999; border: 4px dashed var(--primary-accent);">
     <div class="text-center">
       <i class="bi bi-file-earmark-arrow-up display-1 text-primary mb-3"></i>
       <h2 class="fw-bold">Drop CSV file to open</h2>
@@ -37,11 +42,11 @@
   <nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary border-bottom">
     <div class="container-fluid px-4">
       <span class="navbar-brand text-primary fw-bold">Expense Tracker</span>
-      
+
       <div class="d-flex align-items-center flex-grow-1 justify-content-center">
         <span id="currentFileName" class="text-muted fw-semibold">No file opened</span>
       </div>
-      
+
       <div id="navActions" class="d-none">
         <button id="btnUndoChanges" class="btn btn-outline-secondary btn-sm me-2" disabled>Undo Changes</button>
         <button id="btnSaveChanges" class="btn btn-outline-primary btn-sm me-2">Save Changes</button>
@@ -50,189 +55,202 @@
     </div>
   </nav>
 
-  <!-- Landing View -->
-  <div id="landingView" class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-8 text-center">
-        <h2 class="mb-4">Welcome to Personal Expense Tracker</h2>
-        <p class="text-muted mb-5">Manage your personal finances efficiently directly in your browser. All data stays local.</p>
-        
-        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
-          <button id="btnCreateNewFile" class="btn btn-primary btn-lg px-4 gap-3">Create New File</button>
-        </div>
+  <main>
+    <!-- Landing View -->
+    <div id="landingView" class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+          <h2 class="mb-4">Welcome to Personal Expense Tracker</h2>
+          <p class="text-muted mb-5">Manage your personal finances efficiently directly in your browser. All data stays
+            local.</p>
 
-        <div class="mt-5">
-          <p class="text-muted mb-3">Or open an existing CSV file</p>
-          <div id="dropZone" class="drop-zone p-5 mb-4 bg-body-tertiary rounded-3 border">
-            <h5 class="mb-3">Drag & Drop your CSV file here</h5>
-            <p class="text-muted mb-4">- or -</p>
-            <button id="btnOpenFile" class="btn btn-outline-primary">Browse Files</button>
+          <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+            <button id="btnCreateNewFile" class="btn btn-primary btn-lg px-4 gap-3">Create New File</button>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- App View -->
-  <div id="appView" class="container-fluid mt-4 d-none">
-    
-    <!-- Unsaved changes alert -->
-    <div id="unsavedWarning" class="alert alert-warning d-none" role="alert">
-      You have unsaved changes! Don't forget to click "Save Changes" before leaving.
-    </div>
-
-    <!-- Tabs -->
-    <ul class="nav nav-tabs mb-4 px-3" id="appTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active fw-semibold" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane" type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Home</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link fw-semibold" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-tab-pane" type="button" role="tab" aria-controls="list-tab-pane" aria-selected="false">Transactions</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link fw-semibold" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics-tab-pane" type="button" role="tab" aria-controls="analytics-tab-pane" aria-selected="false">Analytics</button>
-      </li>
-    </ul>
-
-    <div class="tab-content px-3" id="appTabsContent">
-      
-      <!-- Home Tab -->
-      <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab" tabindex="0">
-        <div class="row">
-          <!-- Net Delta Summary -->
-          <div class="col-md-4 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-body text-center">
-                <h5 class="card-title text-muted">Current Net Delta</h5>
-                <h2 id="homeMetricDelta" class="fw-bold my-3">€0.00</h2>
-                <div class="d-grid gap-2 mb-3">
-                  <button class="btn btn-primary btn-add-expense" data-bs-toggle="modal" data-bs-target="#expenseModal">
-                    <i class="bi bi-plus-lg me-1"></i> Add Expense
-                  </button>
-                </div>
-                <button class="btn btn-link text-primary p-0" id="linkToAnalytics">View Detailed Analytics →</button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Recent Transactions -->
-          <div class="col-md-8 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Transactions</h5>
-                <button class="btn btn-link text-primary p-0" id="linkToTransactions">View All →</button>
-              </div>
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0 transaction-table">
-                    <tbody id="homeRecentTbody">
-                      <!-- Populated via JS -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+          <div class="mt-5">
+            <p class="text-muted mb-3">Or open an existing CSV file</p>
+            <div id="dropZone" class="drop-zone p-5 mb-4 bg-body-tertiary rounded-3 border">
+              <h5 class="mb-3">Drag & Drop your CSV file here</h5>
+              <p class="text-muted mb-4">- or -</p>
+              <button id="btnOpenFile" class="btn btn-outline-primary">Browse Files</button>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Transactions Tab -->
-      <div class="tab-pane fade" id="list-tab-pane" role="tabpanel" aria-labelledby="list-tab" tabindex="0">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
-          <h4 class="mb-0">Transaction List</h4>
-          <div class="d-flex gap-2 align-items-center flex-grow-1 justify-content-md-end">
-            <div class="position-relative w-100" style="max-width: 300px;">
-              <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-              <input type="text" id="inputSearchTransaction" class="form-control shadow-sm ps-5" placeholder="Search by description...">
-              <button id="btnClearSearch" class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 d-none border-0 shadow-none" type="button">
-                <i class="bi bi-x-circle-fill text-secondary"></i>
+    <!-- App View -->
+    <div id="appView" class="container-fluid mt-4 d-none">
+
+      <!-- Unsaved changes alert -->
+      <div id="unsavedWarning" class="alert alert-warning d-none" role="alert">
+        You have unsaved changes! Don't forget to click "Save Changes" before leaving.
+      </div>
+
+      <!-- Tabs -->
+      <ul class="nav nav-tabs mb-4 px-3" id="appTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active fw-semibold" id="home-tab" data-bs-toggle="tab" data-bs-target="#home-tab-pane"
+            type="button" role="tab" aria-controls="home-tab-pane" aria-selected="true">Home</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-semibold" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-tab-pane"
+            type="button" role="tab" aria-controls="list-tab-pane" aria-selected="false">Transactions</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link fw-semibold" id="analytics-tab" data-bs-toggle="tab"
+            data-bs-target="#analytics-tab-pane" type="button" role="tab" aria-controls="analytics-tab-pane"
+            aria-selected="false">Analytics</button>
+        </li>
+      </ul>
+
+      <div class="tab-content px-3" id="appTabsContent">
+
+        <!-- Home Tab -->
+        <div class="tab-pane fade show active" id="home-tab-pane" role="tabpanel" aria-labelledby="home-tab"
+          tabindex="0">
+          <div class="row">
+            <!-- Net Delta Summary -->
+            <div class="col-md-4 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                  <h5 class="card-title text-muted">Current Net Delta</h5>
+                  <h2 id="homeMetricDelta" class="fw-bold my-3">€0.00</h2>
+                  <div class="d-grid gap-2 mb-3">
+                    <button class="btn btn-primary btn-add-expense" data-bs-toggle="modal"
+                      data-bs-target="#expenseModal">
+                      <i class="bi bi-plus-lg me-1"></i> Add Expense
+                    </button>
+                  </div>
+                  <button class="btn btn-link text-primary p-0" id="linkToAnalytics">View Detailed Analytics →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="col-md-8 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">Recent Transactions</h5>
+                  <button class="btn btn-link text-primary p-0" id="linkToTransactions">View All →</button>
+                </div>
+                <div class="card-body p-0">
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 transaction-table">
+                      <tbody id="homeRecentTbody">
+                        <!-- Populated via JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div class="tab-pane fade" id="list-tab-pane" role="tabpanel" aria-labelledby="list-tab" tabindex="0">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-3">
+            <h4 class="mb-0">Transaction List</h4>
+            <div class="d-flex gap-2 align-items-center flex-grow-1 justify-content-md-end">
+              <div class="position-relative w-100" style="max-width: 300px;">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" id="inputSearchTransaction" class="form-control shadow-sm ps-5"
+                  placeholder="Search by description...">
+                <button id="btnClearSearch"
+                  class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 d-none border-0 shadow-none"
+                  type="button">
+                  <i class="bi bi-x-circle-fill text-secondary"></i>
+                </button>
+              </div>
+              <button id="btnAddExpense" class="btn btn-primary shadow-sm text-nowrap btn-add-expense"
+                data-bs-toggle="modal" data-bs-target="#expenseModal">
+                + Add Expense
               </button>
             </div>
-            <button id="btnAddExpense" class="btn btn-primary shadow-sm text-nowrap btn-add-expense" data-bs-toggle="modal" data-bs-target="#expenseModal">
-              + Add Expense
-            </button>
+          </div>
+
+          <div class="table-responsive bg-body rounded shadow-sm">
+            <table class="table table-striped align-middle mb-0 transaction-table" id="transactionsTable">
+              <thead class="table-dark">
+                <tr>
+                  <th scope="col" class="sortable d-none d-md-table-cell" data-sort="Date">Date ↕</th>
+                  <th scope="col" class="sortable d-none d-md-table-cell" data-sort="Amount">Amount ↕</th>
+                  <th scope="col" class="d-none d-md-table-cell">Description</th>
+                  <th scope="col" class="sortable d-none d-lg-table-cell" data-sort="Category">Category ↕</th>
+                  <th scope="col" class="d-none d-lg-table-cell">Subcategory</th>
+                  <th scope="col" class="d-none d-xl-table-cell">Tags</th>
+                  <th scope="col" class="d-none d-xl-table-cell">Notes</th>
+                  <th scope="col" class="text-end d-none d-md-table-cell">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div id="emptyState" class="text-center py-5 d-none text-muted">
+            No transactions found. Add one to get started!
           </div>
         </div>
-        
-        <div class="table-responsive bg-body rounded shadow-sm">
-          <table class="table table-striped align-middle mb-0 transaction-table" id="transactionsTable">
-            <thead class="table-dark">
-              <tr>
-                <th scope="col" class="sortable d-none d-md-table-cell" data-sort="Date">Date ↕</th>
-                <th scope="col" class="sortable d-none d-md-table-cell" data-sort="Amount">Amount ↕</th>
-                <th scope="col" class="d-none d-md-table-cell">Description</th>
-                <th scope="col" class="sortable d-none d-lg-table-cell" data-sort="Category">Category ↕</th>
-                <th scope="col" class="d-none d-lg-table-cell">Subcategory</th>
-                <th scope="col" class="d-none d-xl-table-cell">Tags</th>
-                <th scope="col" class="d-none d-xl-table-cell">Notes</th>
-                <th scope="col" class="text-end d-none d-md-table-cell">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="transactionsTbody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
+
+        <!-- Analytics Tab -->
+        <div class="tab-pane fade" id="analytics-tab-pane" role="tabpanel" aria-labelledby="analytics-tab" tabindex="0">
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <div class="card text-center shadow-sm h-100 border-success">
+                <div class="card-body">
+                  <h5 class="card-title text-success">Total Income</h5>
+                  <h2 class="card-text fw-bold" id="metricIncome">$0.00</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mt-3 mt-md-0">
+              <div class="card text-center shadow-sm h-100 border-danger">
+                <div class="card-body">
+                  <h5 class="card-title text-danger">Total Expenses</h5>
+                  <h2 class="card-text fw-bold" id="metricExpenses">$0.00</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mt-3 mt-md-0">
+              <div class="card text-center shadow-sm h-100 border-primary">
+                <div class="card-body">
+                  <h5 class="card-title text-primary">Net Delta</h5>
+                  <h2 class="card-text fw-bold" id="metricDelta">$0.00</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-6 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent border-bottom-0">
+                  <h5 class="card-title mb-0">Expenses by Category</h5>
+                </div>
+                <div class="card-body">
+                  <canvas id="categoryPieChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-transparent border-bottom-0">
+                  <h5 class="card-title mb-0">Income vs Expenses Overview</h5>
+                </div>
+                <div class="card-body">
+                  <canvas id="incomeVsExpenseChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div id="emptyState" class="text-center py-5 d-none text-muted">
-          No transactions found. Add one to get started!
-        </div>
+
       </div>
-
-      <!-- Analytics Tab -->
-      <div class="tab-pane fade" id="analytics-tab-pane" role="tabpanel" aria-labelledby="analytics-tab" tabindex="0">
-        <div class="row mb-4">
-          <div class="col-md-4">
-            <div class="card text-center shadow-sm h-100 border-success">
-              <div class="card-body">
-                <h5 class="card-title text-success">Total Income</h5>
-                <h2 class="card-text fw-bold" id="metricIncome">$0.00</h2>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4 mt-3 mt-md-0">
-            <div class="card text-center shadow-sm h-100 border-danger">
-              <div class="card-body">
-                <h5 class="card-title text-danger">Total Expenses</h5>
-                <h2 class="card-text fw-bold" id="metricExpenses">$0.00</h2>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4 mt-3 mt-md-0">
-            <div class="card text-center shadow-sm h-100 border-primary">
-              <div class="card-body">
-                <h5 class="card-title text-primary">Net Delta</h5>
-                <h2 class="card-text fw-bold" id="metricDelta">$0.00</h2>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-header bg-transparent border-bottom-0">
-                <h5 class="card-title mb-0">Expenses by Category</h5>
-              </div>
-              <div class="card-body">
-                <canvas id="categoryPieChart"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-              <div class="card-header bg-transparent border-bottom-0">
-                <h5 class="card-title mb-0">Income vs Expenses Overview</h5>
-              </div>
-              <div class="card-body">
-                <canvas id="incomeVsExpenseChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
-  </div>
+  </main>
 
   <!-- Expense Modal (Add/Edit) -->
   <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
@@ -245,16 +263,18 @@
         <div class="modal-body">
           <form id="expenseForm">
             <input type="hidden" id="editTransactionId" value="">
-            
+
             <!-- Quick Inline Entry -->
             <div class="mb-4 p-3 bg-body-tertiary rounded border border-primary-subtle">
               <label for="inlineInput" class="form-label fw-bold text-primary">Quick Inline Entry</label>
-              <textarea class="form-control form-control-lg" id="inlineInput" rows="2" placeholder="2026-04-28, €-20, Groceries&#10;2026-04-28T11:58:44+02:00, €34.5, Income..."></textarea>
-              <div class="form-text">Format: YYYY-MM-DD or ISO (YYYY-MM-DDThh:mm:ss), Amount (+/-), Description. Separated by commas. Multiple lines supported.</div>
+              <textarea class="form-control form-control-lg" id="inlineInput" rows="2"
+                placeholder="2026-04-28, €-20, Groceries&#10;2026-04-28T11:58:44+02:00, €34.5, Income..."></textarea>
+              <div class="form-text">Format: YYYY-MM-DD or ISO (YYYY-MM-DDThh:mm:ss), Amount (+/-), Description.
+                Separated by commas. Multiple lines supported.</div>
             </div>
-            
+
             <hr class="mb-4">
-            
+
             <div class="row g-3 mb-3">
               <div class="col-md-4">
                 <label for="inputDate" class="form-label">Date <span class="text-danger">*</span></label>
@@ -266,14 +286,16 @@
               </div>
               <div class="col-md-4">
                 <label for="inputAmount" class="form-label">Amount <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" class="form-control" id="inputAmount" placeholder="e.g. 50.00 or -50" required>
+                <input type="number" step="0.01" class="form-control" id="inputAmount" placeholder="e.g. 50.00 or -50"
+                  required>
                 <div class="form-text">Positive for Income, negative for Expense.</div>
               </div>
             </div>
 
             <div class="mb-3">
               <label for="inputDescription" class="form-label">Description <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="inputDescription" placeholder="e.g. Weekly Groceries" required>
+              <input type="text" class="form-control" id="inputDescription" placeholder="e.g. Weekly Groceries"
+                required>
             </div>
 
             <div class="row g-3 mb-3">
@@ -295,14 +317,15 @@
 
             <div class="mb-3">
               <label for="inputTags" class="form-label">Tags</label>
-              <input type="text" class="form-control" id="inputTags" placeholder="Comma separated, e.g. urgent, business">
+              <input type="text" class="form-control" id="inputTags"
+                placeholder="Comma separated, e.g. urgent, business">
             </div>
 
             <div class="mb-3">
               <label for="inputNotes" class="form-label">Notes</label>
               <textarea class="form-control" id="inputNotes" rows="2" placeholder="Additional details..."></textarea>
             </div>
-            
+
             <div class="d-flex justify-content-between mt-4">
               <button type="button" class="btn btn-danger d-none" id="btnDeleteTransactionModal">Delete</button>
               <div class="text-end flex-grow-1">
@@ -316,12 +339,20 @@
     </div>
   </div>
 
+  <footer class="py-4 mt-5 border-top bg-body-tertiary">
+    <div class="container text-center">
+      <p class="text-muted mb-0 small" style="letter-spacing: 2px;">"Cash Rules Everything Around Me"</p>
+    </div>
+  </footer>
+
   <!-- PapaParse, Chart.js, Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    crossorigin="anonymous"></script>
 
   <!-- Application Logic -->
   <script type="module" src="assets/js/app.js"></script>
 </body>
+
 </html>
