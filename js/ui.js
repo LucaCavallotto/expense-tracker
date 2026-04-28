@@ -32,6 +32,19 @@ function getCategoryMeta(category) {
 
 let expenseModalInstance = null;
 
+function parseInlineDate(dateStr) {
+  let dateVal = '';
+  let timeVal = '';
+  const isoMatch = dateStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
+  if (isoMatch) {
+    dateVal = isoMatch[1];
+    timeVal = isoMatch[2];
+  } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    dateVal = dateStr;
+  }
+  return { dateVal, timeVal };
+}
+
 /**
  * Initializes listeners for DOM elements related to the UI layer.
  */
@@ -52,17 +65,29 @@ export function setupUIEvents() {
   if (inlineInput) {
     inlineInput.addEventListener('input', (e) => {
       const val = e.target.value.trim();
-      if (!val) return;
-      const parts = val.split(',').map(p => p.trim());
+      if (!val) {
+        document.getElementById('inputDate').required = true;
+        document.getElementById('inputAmount').required = true;
+        document.getElementById('inputDescription').required = true;
+        return;
+      }
+      
+      const lines = val.split('\n').map(l => l.trim()).filter(l => l);
+      
+      // If multiple lines, make standard fields non-mandatory so the form can submit
+      const isMultiLine = lines.length > 1;
+      document.getElementById('inputDate').required = !isMultiLine;
+      document.getElementById('inputAmount').required = !isMultiLine;
+      document.getElementById('inputDescription').required = !isMultiLine;
+      
+      const firstLine = lines[0];
+      const parts = firstLine.split(',').map(p => p.trim());
       
       if (parts.length > 0 && parts[0]) {
-        const dateMatch = parts[0].match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-        if (dateMatch) {
-          const day = dateMatch[1].padStart(2, '0');
-          const month = dateMatch[2].padStart(2, '0');
-          const year = dateMatch[3];
-          document.getElementById('inputDate').value = `${year}-${month}-${day}`;
-        }
+        const { dateVal, timeVal } = parseInlineDate(parts[0]);
+        if (dateVal) document.getElementById('inputDate').value = dateVal;
+        const timeInput = document.getElementById('inputTime');
+        if (timeInput && timeVal) timeInput.value = timeVal;
       }
       
       if (parts.length > 1 && parts[1]) {
@@ -221,6 +246,10 @@ function resetForm() {
   document.getElementById('expenseModalLabel').textContent = 'Add Transaction';
   document.getElementById('inputSubcategory').innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
   
+  document.getElementById('inputDate').required = true;
+  document.getElementById('inputAmount').required = true;
+  document.getElementById('inputDescription').required = true;
+
   const btnDelete = document.getElementById('btnDeleteTransactionModal');
   if (btnDelete) btnDelete.classList.add('d-none');
 }
@@ -494,34 +523,69 @@ function handleTransactionSubmit(e) {
   e.preventDefault();
   
   const id = document.getElementById('editTransactionId').value;
-  const DateVal = document.getElementById('inputDate').value;
-  const TimeVal = document.getElementById('inputTime') ? document.getElementById('inputTime').value : '';
-  const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
-  const Description = document.getElementById('inputDescription').value;
+  const inlineInput = document.getElementById('inlineInput');
+  const inlineVal = inlineInput ? inlineInput.value.trim() : '';
+  const lines = inlineVal.split('\n').map(l => l.trim()).filter(l => l);
+  
   const Category = document.getElementById('inputCategory').value || 'Uncategorized';
   const Subcategory = document.getElementById('inputSubcategory').value || '';
   const Tags = document.getElementById('inputTags').value;
   const Notes = document.getElementById('inputNotes').value;
-  
-  if (id) {
-    // Perform Edit
-    const index = state.transactions.findIndex(t => t.id === id);
-    if (index !== -1) {
-      state.transactions[index] = { id, Date: DateVal, Time: TimeVal, Amount, Description, Category, Subcategory, Tags, Notes };
-    }
-  } else {
-    // Perform Add
-    state.transactions.push({
-      id: crypto.randomUUID(),
-      Date: DateVal,
-      Time: TimeVal,
-      Amount,
-      Description,
-      Category,
-      Subcategory,
-      Tags,
-      Notes
+
+  if (!id && lines.length > 1) {
+    // Multi-line add
+    lines.forEach((line, index) => {
+      const parts = line.split(',').map(p => p.trim());
+      if (parts.length < 2) return;
+      
+      const { dateVal, timeVal } = parseInlineDate(parts[0]);
+      if (!dateVal) return;
+      
+      let amountStr = parts[1].replace(',', '.').replace(/[^\d\.\+\-]/g, '');
+      const amountFloat = parseFloat(amountStr);
+      if (isNaN(amountFloat)) return;
+      
+      const desc = parts.length > 2 ? parts.slice(2).join(', ') : '';
+      
+      state.transactions.push({
+        id: crypto.randomUUID(),
+        Date: dateVal,
+        Time: timeVal,
+        Amount: amountFloat,
+        Description: desc,
+        Category: Category,
+        Subcategory: Subcategory,
+        Tags: Tags,
+        Notes: Notes
+      });
     });
+  } else {
+    // Standard Single Add/Edit
+    const DateVal = document.getElementById('inputDate').value;
+    const TimeVal = document.getElementById('inputTime') ? document.getElementById('inputTime').value : '';
+    const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
+    const Description = document.getElementById('inputDescription').value;
+    
+    if (id) {
+      // Perform Edit
+      const index = state.transactions.findIndex(t => t.id === id);
+      if (index !== -1) {
+        state.transactions[index] = { id, Date: DateVal, Time: TimeVal, Amount, Description, Category, Subcategory, Tags, Notes };
+      }
+    } else {
+      // Perform Add
+      state.transactions.push({
+        id: crypto.randomUUID(),
+        Date: DateVal,
+        Time: TimeVal,
+        Amount,
+        Description,
+        Category,
+        Subcategory,
+        Tags,
+        Notes
+      });
+    }
   }
   
   markUnsavedChanges();

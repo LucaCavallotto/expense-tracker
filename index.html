@@ -237,8 +237,8 @@
             <!-- Quick Inline Entry -->
             <div class="mb-4 p-3 bg-body-tertiary rounded border border-primary-subtle">
               <label for="inlineInput" class="form-label fw-bold text-primary">Quick Inline Entry</label>
-              <input type="text" class="form-control form-control-lg" id="inlineInput" placeholder="DD/MM/YYYY, -50.00, Groceries">
-              <div class="form-text">Format: Date, Amount (+ for income, - for expense), Description. Separated by commas.</div>
+              <textarea class="form-control form-control-lg" id="inlineInput" rows="2" placeholder="2026-04-28, €-20, Groceries&#10;2026-04-28T11:58:44+02:00, €34.5, Income..."></textarea>
+              <div class="form-text">Format: YYYY-MM-DD or ISO (YYYY-MM-DDThh:mm:ss), Amount (+/-), Description. Separated by commas. Multiple lines supported.</div>
             </div>
             
             <hr class="mb-4">
