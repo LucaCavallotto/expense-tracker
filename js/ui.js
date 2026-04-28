@@ -135,7 +135,7 @@ export function renderApp() {
   const navActions = document.getElementById('navActions');
   const currentFileName = document.getElementById('currentFileName');
   
-  if (state.fileHandle) {
+  if (state.fileName) {
     // A file is open
     landingView.classList.add('d-none');
     appView.classList.remove('d-none');

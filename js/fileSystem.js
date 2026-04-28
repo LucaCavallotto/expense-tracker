@@ -47,11 +47,33 @@ export function setupFileSystemEvents() {
       if (e.dataTransfer.items) {
         const item = e.dataTransfer.items[0];
         if (item.kind === 'file') {
-          const fileHandle = await item.getAsFileSystemHandle();
-          if (fileHandle && fileHandle.kind === 'file') {
-            await openFileFromHandle(fileHandle);
+          if (item.getAsFileSystemHandle) {
+            const fileHandle = await item.getAsFileSystemHandle();
+            if (fileHandle && fileHandle.kind === 'file') {
+              await openFileFromHandle(fileHandle);
+            }
+          } else {
+            const file = item.getAsFile();
+            if (file) {
+              state.fileHandle = null;
+              state.fileName = file.name;
+              const text = await file.text();
+              parseCSV(text);
+              state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+              clearUnsavedChanges();
+              renderApp();
+            }
           }
         }
+      } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        state.fileHandle = null;
+        state.fileName = file.name;
+        const text = await file.text();
+        parseCSV(text);
+        state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+        clearUnsavedChanges();
+        renderApp();
       }
     });
   }
@@ -62,16 +84,24 @@ export function setupFileSystemEvents() {
  */
 async function handleCreateNewFile() {
   try {
-    const opts = {
-      types: [{
-        description: 'CSV Files',
-        accept: {'text/csv': ['.csv']},
-      }],
-    };
-    // Prompt the user to select where to create the new CSV
-    const fileHandle = await window.showSaveFilePicker(opts);
-    state.fileHandle = fileHandle;
-    state.fileName = fileHandle.name;
+    if (window.showSaveFilePicker) {
+      const opts = {
+        types: [{
+          description: 'CSV Files',
+          accept: {'text/csv': ['.csv']},
+        }],
+      };
+      // Prompt the user to select where to create the new CSV
+      const fileHandle = await window.showSaveFilePicker(opts);
+      state.fileHandle = fileHandle;
+      state.fileName = fileHandle.name;
+    } else {
+      // Fallback for iOS / Unsupported browsers
+      const fileName = prompt("Enter file name for your new CSV:", "expenses.csv");
+      if (!fileName) return; // cancelled
+      state.fileHandle = null;
+      state.fileName = fileName.endsWith('.csv') ? fileName : fileName + '.csv';
+    }
     state.transactions = []; // Empty since it's new
     state.originalTransactions = [];
     clearUnsavedChanges();
@@ -86,13 +116,32 @@ async function handleCreateNewFile() {
  */
 async function handleOpenFilePicker() {
   try {
-    const [fileHandle] = await window.showOpenFilePicker({
-      types: [{
-        description: 'CSV Files',
-        accept: {'text/csv': ['.csv']},
-      }],
-    });
-    await openFileFromHandle(fileHandle);
+    if (window.showOpenFilePicker) {
+      const [fileHandle] = await window.showOpenFilePicker({
+        types: [{
+          description: 'CSV Files',
+          accept: {'text/csv': ['.csv']},
+        }],
+      });
+      await openFileFromHandle(fileHandle);
+    } else {
+      // Fallback for iOS / Unsupported browsers
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv';
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        state.fileHandle = null;
+        state.fileName = file.name;
+        const text = await file.text();
+        parseCSV(text);
+        state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+        clearUnsavedChanges();
+        renderApp();
+      };
+      input.click();
+    }
   } catch (error) {
     console.error("File open cancelled or failed", error);
   }
@@ -144,8 +193,8 @@ function parseCSV(csvText) {
  * Writes the current state.transactions array back to the local file.
  */
 export async function saveFile() {
-  if (!state.fileHandle) {
-    alert("No file handle available to save.");
+  if (!state.fileHandle && !state.fileName) {
+    alert("No file available to save.");
     return;
   }
   
@@ -161,15 +210,28 @@ export async function saveFile() {
       columns: ["Date", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"]
     });
     
-    const writable = await state.fileHandle.createWritable();
-    await writable.write(csvContent);
-    await writable.close();
+    if (state.fileHandle && window.showSaveFilePicker) {
+      const writable = await state.fileHandle.createWritable();
+      await writable.write(csvContent);
+      await writable.close();
+      alert("Changes saved successfully!");
+    } else {
+      // Fallback download for iOS / Unsupported browsers
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', state.fileName || 'expenses.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      alert("Changes downloaded successfully!");
+    }
     
     // Commit changes to original state
     state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
     
     clearUnsavedChanges();
-    alert("Changes saved successfully!");
   } catch (error) {
     console.error("Failed to save file", error);
     alert("Failed to save file. Ensure you have granted the necessary permissions.");
