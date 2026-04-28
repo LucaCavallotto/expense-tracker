@@ -25,6 +25,13 @@
   </script>
 </head>
 <body>
+  <!-- Global Drag & Drop Overlay -->
+  <div id="globalDropOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-body bg-opacity-75 d-flex align-items-center justify-content-center" style="z-index: 9999; border: 4px dashed var(--primary-accent);">
+    <div class="text-center">
+      <i class="bi bi-file-earmark-arrow-up display-1 text-primary mb-3"></i>
+      <h2 class="fw-bold">Drop CSV file to open</h2>
+    </div>
+  </div>
 
   <!-- Sticky Navbar -->
   <nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary border-bottom">

@@ -30,53 +30,70 @@ export function setupFileSystemEvents() {
   if (btnCloseFile) btnCloseFile.addEventListener('click', closeFile);
   if (btnUndoChanges) btnUndoChanges.addEventListener('click', undoChanges);
 
-  // Set up Drag & Drop events for the landing view
-  if (dropZone) {
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-    
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('dragover');
-    });
-    
-    dropZone.addEventListener('drop', async (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      if (e.dataTransfer.items) {
-        const item = e.dataTransfer.items[0];
-        if (item.kind === 'file') {
-          if (item.getAsFileSystemHandle) {
-            const fileHandle = await item.getAsFileSystemHandle();
-            if (fileHandle && fileHandle.kind === 'file') {
-              await openFileFromHandle(fileHandle);
-            }
-          } else {
-            const file = item.getAsFile();
-            if (file) {
-              state.fileHandle = null;
-              state.fileName = file.name;
-              const text = await file.text();
-              parseCSV(text);
-              state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
-              clearUnsavedChanges();
-              renderApp();
-            }
+  // Global Drag & Drop events
+  const globalOverlay = document.getElementById('globalDropOverlay');
+  let dragCounter = 0;
+
+  window.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    if (globalOverlay) globalOverlay.classList.remove('d-none');
+  });
+
+  window.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  window.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      if (globalOverlay) globalOverlay.classList.add('d-none');
+    }
+  });
+
+  window.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    if (globalOverlay) globalOverlay.classList.add('d-none');
+
+    if (state.hasUnsavedChanges) {
+      if (!confirm("You have unsaved changes. Opening a new file will discard them. Continue?")) return;
+    }
+
+    if (e.dataTransfer.items) {
+      const item = e.dataTransfer.items[0];
+      if (item && item.kind === 'file') {
+        if (item.getAsFileSystemHandle) {
+          const fileHandle = await item.getAsFileSystemHandle();
+          if (fileHandle && fileHandle.kind === 'file') {
+            await openFileFromHandle(fileHandle);
+          }
+        } else {
+          const file = item.getAsFile();
+          if (file) {
+            state.fileHandle = null;
+            state.fileName = file.name;
+            const text = await file.text();
+            parseCSV(text);
+            state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+            clearUnsavedChanges();
+            renderApp();
           }
         }
-      } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const file = e.dataTransfer.files[0];
-        state.fileHandle = null;
-        state.fileName = file.name;
-        const text = await file.text();
-        parseCSV(text);
-        state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
-        clearUnsavedChanges();
-        renderApp();
       }
-    });
-  }
+    } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      state.fileHandle = null;
+      state.fileName = file.name;
+      const text = await file.text();
+      parseCSV(text);
+      state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+      clearUnsavedChanges();
+      renderApp();
+    }
+  });
 }
 
 /**
