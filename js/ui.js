@@ -263,7 +263,7 @@ function renderHomeSection() {
       
       tr.innerHTML = `
         <!-- Desktop Layout -->
-        <td class="d-none d-md-table-cell"><small class="text-muted">${formatDate(t.Date)}</small></td>
+        <td class="d-none d-md-table-cell"><small class="text-muted">${formatDate(t.Date, t.Time)}</small></td>
         <td class="d-none d-md-table-cell">${t.Description}</td>
         <td class="text-end d-none d-md-table-cell ${amountClass}">${amountStr}</td>
         
@@ -285,7 +285,7 @@ function renderHomeSection() {
             </div>
             <div class="text-end">
               <div class="${amountClass}" style="font-size: 1.1rem;">${amountStr}</div>
-              <div class="text-muted small mt-1">${formatDate(t.Date)}</div>
+              <div class="text-muted small mt-1">${t.Time ? t.Time : formatDate(t.Date)}</div>
             </div>
           </div>
         </td>
@@ -304,10 +304,14 @@ function renderHomeSection() {
   }
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr, timeStr) {
   if (!dateStr) return '';
   const [year, month, day] = dateStr.split('-');
-  return `${day}/${month}/${year}`;
+  const formattedDate = `${day}/${month}/${year}`;
+  if (timeStr) {
+    return `${formattedDate} ${timeStr}`;
+  }
+  return formattedDate;
 }
 
 /**
@@ -379,7 +383,7 @@ export function renderTransactions() {
     
     tr.innerHTML = `
       <!-- Desktop Layout -->
-      <td class="d-none d-md-table-cell">${formatDate(t.Date)}</td>
+      <td class="d-none d-md-table-cell">${formatDate(t.Date, t.Time)}</td>
       <td class="d-none d-md-table-cell ${amountClass}">${amountStr}</td>
       <td class="d-none d-md-table-cell">${t.Description}</td>
       <td class="d-none d-lg-table-cell"><span class="badge bg-secondary">${t.Category || 'Uncategorized'}</span></td>
@@ -409,7 +413,7 @@ export function renderTransactions() {
           </div>
           <div class="text-end">
             <div class="${amountClass}" style="font-size: 1.1rem;">${amountStr}</div>
-            <div class="text-muted small mt-1">18:00</div>
+            <div class="text-muted small mt-1">${t.Time ? t.Time : formatDate(t.Date)}</div>
           </div>
         </div>
       </td>
@@ -452,6 +456,7 @@ function editTransaction(id) {
   
   document.getElementById('editTransactionId').value = t.id;
   document.getElementById('inputDate').value = t.Date;
+  document.getElementById('inputTime').value = t.Time || '';
   document.getElementById('inputAmount').value = t.Amount;
   document.getElementById('inputDescription').value = t.Description;
   
@@ -490,6 +495,7 @@ function handleTransactionSubmit(e) {
   
   const id = document.getElementById('editTransactionId').value;
   const DateVal = document.getElementById('inputDate').value;
+  const TimeVal = document.getElementById('inputTime') ? document.getElementById('inputTime').value : '';
   const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
   const Description = document.getElementById('inputDescription').value;
   const Category = document.getElementById('inputCategory').value || 'Uncategorized';
@@ -501,13 +507,14 @@ function handleTransactionSubmit(e) {
     // Perform Edit
     const index = state.transactions.findIndex(t => t.id === id);
     if (index !== -1) {
-      state.transactions[index] = { id, Date: DateVal, Amount, Description, Category, Subcategory, Tags, Notes };
+      state.transactions[index] = { id, Date: DateVal, Time: TimeVal, Amount, Description, Category, Subcategory, Tags, Notes };
     }
   } else {
     // Perform Add
     state.transactions.push({
       id: crypto.randomUUID(),
       Date: DateVal,
+      Time: TimeVal,
       Amount,
       Description,
       Category,

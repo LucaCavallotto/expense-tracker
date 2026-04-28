@@ -244,14 +244,18 @@
             <hr class="mb-4">
             
             <div class="row g-3 mb-3">
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <label for="inputDate" class="form-label">Date <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" id="inputDate" required>
               </div>
-              <div class="col-md-6">
+              <div class="col-md-4">
+                <label for="inputTime" class="form-label">Time <span class="text-muted">(Optional)</span></label>
+                <input type="time" step="1" class="form-control" id="inputTime">
+              </div>
+              <div class="col-md-4">
                 <label for="inputAmount" class="form-label">Amount <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" class="form-control" id="inputAmount" placeholder="e.g. 50.00 or -50.00" required>
-                <div class="form-text">Use positive for Income, negative for Expense.</div>
+                <input type="number" step="0.01" class="form-control" id="inputAmount" placeholder="e.g. 50.00 or -50" required>
+                <div class="form-text">Positive for Income, negative for Expense.</div>
               </div>
             </div>
 

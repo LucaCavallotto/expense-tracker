@@ -178,6 +178,7 @@ function parseCSV(csvText) {
       state.transactions = results.data.map(row => ({
         id: crypto.randomUUID(), // Assign unique runtime ID
         Date: row.Date || '',
+        Time: row.Time || '',
         Amount: parseFloat(row.Amount) || 0,
         Description: row.Description || '',
         Category: row.Category || '',
@@ -207,7 +208,7 @@ export async function saveFile() {
     
     // Explicitly order columns to match the required format
     const csvContent = Papa.unparse(dataToSave, {
-      columns: ["Date", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"]
+      columns: ["Date", "Time", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"]
     });
     
     if (state.fileHandle && window.showSaveFilePicker) {
