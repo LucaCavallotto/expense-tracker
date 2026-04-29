@@ -388,92 +388,95 @@ export function renderTransactions() {
   // Build and insert DOM rows
   let txCounter = 0;
   sorted.forEach((t) => {
-    if (isDateSorted && t.DateTime) {
-      const year = t.DateTime.substring(0, 4);
-      const month = t.DateTime.substring(5, 7);
+    try {
+      if (isDateSorted && t.DateTime) {
+        const year = t.DateTime.substring(0, 4);
+        const month = t.DateTime.substring(5, 7);
 
-      if (year !== lastYear) {
-        const yearTr = document.createElement('tr');
-        yearTr.className = 'year-divider-row divider-row';
-        yearTr.innerHTML = `
-          <td colspan="9" class="p-2 text-center text-muted fw-bold small text-uppercase border-0">
-            — ${year} —
-          </td>
-        `;
-        tbody.appendChild(yearTr);
-        lastYear = year;
-        lastMonth = null; // Reset month when year changes
+        if (year !== lastYear) {
+          const yearTr = document.createElement('tr');
+          yearTr.className = 'year-divider-row divider-row';
+          yearTr.innerHTML = `
+            <td colspan="9" class="p-2 text-center text-muted fw-bold small text-uppercase border-0">
+              — ${year} —
+            </td>
+          `;
+          tbody.appendChild(yearTr);
+          lastYear = year;
+          lastMonth = null; // Reset month when year changes
+        }
+
+        if (month !== lastMonth) {
+          const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          const monthName = monthNames[parseInt(month, 10) - 1] || month;
+          
+          const monthTr = document.createElement('tr');
+          monthTr.className = 'month-divider-row divider-row';
+          monthTr.innerHTML = `
+            <td colspan="9" class="px-3 py-2 text-primary fw-semibold small text-uppercase border-0" style="background-color: var(--bs-secondary-bg); opacity: 0.9;">
+              ${monthName}
+            </td>
+          `;
+          tbody.appendChild(monthTr);
+          lastMonth = month;
+        }
       }
 
-      if (month !== lastMonth) {
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const monthName = monthNames[parseInt(month, 10) - 1] || month;
-        
-        const monthTr = document.createElement('tr');
-        monthTr.className = 'month-divider-row divider-row';
-        monthTr.innerHTML = `
-          <td colspan="9" class="px-3 py-2 text-primary fw-semibold small text-uppercase border-0" style="background-color: var(--bs-secondary-bg); opacity: 0.9;">
-            ${monthName}
-          </td>
-        `;
-        tbody.appendChild(monthTr);
-        lastMonth = month;
-      }
-
-    }
-
-    const tr = document.createElement('tr');
-    tr.className = 'mobile-row-click';
-    if (txCounter % 2 === 1) tr.classList.add('bg-body-tertiary');
-    tr.setAttribute('data-id', t.id);
-    txCounter++;
-    
-    const isIncome = t.Amount >= 0;
-    const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
-    const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
-    const meta = getCategoryMeta(t.Category);
-    const isSelected = state.selectedIds.includes(t.id);
-    
-    tr.innerHTML = `
-      <!-- Selection Checkbox -->
-      <td class="selection-column ${state.isSelectionMode ? '' : 'd-none'} text-center">
-        <input type="checkbox" class="form-check-input transaction-checkbox" data-id="${t.id}" ${isSelected ? 'checked' : ''}>
-      </td>
-
-      <!-- Desktop Layout -->
-      <td class="d-none d-md-table-cell">${formatDate(t.DateTime)}</td>
-      <td class="d-none d-md-table-cell ${amountClass}">${amountStr}</td>
-      <td class="d-none d-md-table-cell">${t.Description}</td>
-      <td class="d-none d-lg-table-cell"><span class="badge bg-secondary">${t.Category || 'Uncategorized'}</span></td>
-      <td class="d-none d-lg-table-cell">${t.Subcategory}</td>
-      <td class="d-none d-xl-table-cell">${(t.Tags || '').split(',').filter(tag => tag.trim()).map(tag => `<span class="badge rounded-pill text-bg-light border text-dark me-1" style="font-weight: 500;">${tag.trim()}</span>`).join('')}</td>
-      <td class="d-none d-xl-table-cell">${t.Notes}</td>
-      <td class="text-end text-nowrap d-none d-md-table-cell">
-        <button class="btn btn-sm btn-outline-primary me-1 btn-edit ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Edit</button>
-        <button class="btn btn-sm btn-outline-danger btn-del ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Del</button>
-      </td>
+      const tr = document.createElement('tr');
+      tr.className = 'mobile-row-click';
+      if (txCounter % 2 === 1) tr.classList.add('bg-body-tertiary');
+      tr.setAttribute('data-id', t.id);
+      txCounter++;
       
-      <!-- Mobile Layout -->
-      <td class="d-md-none mobile-visible w-100 p-0 border-0">
-        <div class="d-flex align-items-center w-100 p-2 ${isSelected && state.isSelectionMode ? 'bg-primary-subtle' : ''}">
-          <div style="width: 44px; flex-shrink: 0;">
-            <div class="category-icon shadow-sm ${meta.color}">
-              <i class="bi ${meta.icon}"></i>
+      const isIncome = t.Amount >= 0;
+      const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
+      const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
+      const meta = getCategoryMeta(t.Category);
+      const isSelected = state.selectedIds.includes(t.id);
+      
+      tr.innerHTML = `
+        <!-- Selection Checkbox -->
+        <td class="selection-column ${state.isSelectionMode ? '' : 'd-none'} text-center">
+          <input type="checkbox" class="form-check-input transaction-checkbox" data-id="${t.id}" ${isSelected ? 'checked' : ''}>
+        </td>
+
+        <!-- Desktop Layout -->
+        <td class="d-none d-md-table-cell">${formatDate(t.DateTime)}</td>
+        <td class="d-none d-md-table-cell ${amountClass}">${amountStr}</td>
+        <td class="d-none d-md-table-cell">${t.Description}</td>
+        <td class="d-none d-lg-table-cell"><span class="badge bg-secondary">${t.Category || 'Uncategorized'}</span></td>
+        <td class="d-none d-lg-table-cell">${t.Subcategory}</td>
+        <td class="d-none d-xl-table-cell">${(t.Tags || '').split(',').filter(tag => tag.trim()).map(tag => `<span class="badge rounded-pill text-bg-light border text-dark me-1" style="font-weight: 500;">${tag.trim()}</span>`).join('')}</td>
+        <td class="d-none d-xl-table-cell">${t.Notes}</td>
+        <td class="text-end text-nowrap d-none d-md-table-cell">
+          <button class="btn btn-sm btn-outline-primary me-1 btn-edit ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Edit</button>
+          <button class="btn btn-sm btn-outline-danger btn-del ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Del</button>
+        </td>
+        
+        <!-- Mobile Layout -->
+        <td class="d-md-none mobile-visible w-100 p-0 border-0">
+          <div class="d-flex align-items-center w-100 p-2 ${isSelected && state.isSelectionMode ? 'bg-primary-subtle' : ''}">
+            <div style="width: 44px; flex-shrink: 0;">
+              <div class="category-icon shadow-sm ${meta.color}">
+                <i class="bi ${meta.icon}"></i>
+              </div>
+            </div>
+            <div class="flex-grow-1 ms-3 overflow-hidden" style="min-width: 0;">
+              <div class="fw-bold text-truncate" style="font-size: 1.05rem;">${t.Description}</div>
+              <div class="text-muted small text-truncate">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
+              ${t.Notes ? `<div class="text-muted small text-truncate">${t.Notes}</div>` : ''}
+            </div>
+            <div class="text-end ms-2" style="flex-shrink: 0;">
+              <div class="${amountClass} text-nowrap" style="font-size: 1.1rem;">${amountStr}</div>
+              <div class="text-muted small mt-1 text-nowrap">${formatDate(t.DateTime)}</div>
             </div>
           </div>
-          <div class="flex-grow-1 ms-3 overflow-hidden" style="min-width: 0;">
-            <div class="fw-bold text-truncate" style="font-size: 1.05rem;">${t.Description}</div>
-            <div class="text-muted small text-truncate">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
-            ${t.Notes ? `<div class="text-muted small text-truncate">${t.Notes}</div>` : ''}
-          </div>
-          <div class="text-end ms-2" style="flex-shrink: 0;">
-            <div class="${amountClass} text-nowrap" style="font-size: 1.1rem;">${amountStr}</div>
-            <div class="text-muted small mt-1 text-nowrap">${formatDate(t.DateTime)}</div>
-          </div>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
+        </td>
+      `;
+      tbody.appendChild(tr);
+    } catch (error) {
+      console.error("Failed to render transaction:", t, error);
+    }
   });
   
   // Mobile row click

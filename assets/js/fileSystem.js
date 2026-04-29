@@ -1,6 +1,8 @@
 import { state, clearUnsavedChanges } from './app.js';
 import { renderApp, showStatusMessage } from './ui.js';
 
+const REQUIRED_HEADERS = ["DateTime", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"];
+
 /**
  * Loads the categories JSON asynchronously.
  */
@@ -73,25 +75,27 @@ export function setupFileSystemEvents() {
         } else {
           const file = item.getAsFile();
           if (file) {
-            state.fileHandle = null;
-            state.fileName = file.name;
             const text = await file.text();
-            parseCSV(text);
-            state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
-            clearUnsavedChanges();
-            renderApp();
+            if (parseCSV(text)) {
+              state.fileHandle = null;
+              state.fileName = file.name;
+              state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+              clearUnsavedChanges();
+              renderApp();
+            }
           }
         }
       }
     } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
-      state.fileHandle = null;
-      state.fileName = file.name;
       const text = await file.text();
-      parseCSV(text);
-      state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
-      clearUnsavedChanges();
-      renderApp();
+      if (parseCSV(text)) {
+        state.fileHandle = null;
+        state.fileName = file.name;
+        state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+        clearUnsavedChanges();
+        renderApp();
+      }
     }
   });
 }
@@ -105,7 +109,7 @@ async function handleCreateNewFile() {
       const opts = {
         types: [{
           description: 'CSV Files',
-          accept: {'text/csv': ['.csv']},
+          accept: { 'text/csv': ['.csv'] },
         }],
       };
       // Prompt the user to select where to create the new CSV
@@ -137,7 +141,7 @@ async function handleOpenFilePicker() {
       const [fileHandle] = await window.showOpenFilePicker({
         types: [{
           description: 'CSV Files',
-          accept: {'text/csv': ['.csv']},
+          accept: { 'text/csv': ['.csv'] },
         }],
       });
       await openFileFromHandle(fileHandle);
@@ -149,13 +153,14 @@ async function handleOpenFilePicker() {
       input.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        state.fileHandle = null;
-        state.fileName = file.name;
         const text = await file.text();
-        parseCSV(text);
-        state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
-        clearUnsavedChanges();
-        renderApp();
+        if (parseCSV(text)) {
+          state.fileHandle = null;
+          state.fileName = file.name;
+          state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+          clearUnsavedChanges();
+          renderApp();
+        }
       };
       input.click();
     }
@@ -170,30 +175,51 @@ async function handleOpenFilePicker() {
 async function openFileFromHandle(fileHandle) {
   state.fileHandle = fileHandle;
   state.fileName = fileHandle.name;
-  
+
   const file = await fileHandle.getFile();
   const text = await file.text();
-  
-  parseCSV(text);
-  // parseCSV is async because PapaParse might be, but here it's sync. 
-  // Let's ensure originalTransactions is set after parsing.
-  state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
-  
-  clearUnsavedChanges();
-  renderApp();
+
+  if (parseCSV(text)) {
+    state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
+    clearUnsavedChanges();
+    renderApp();
+  }
 }
 
 /**
  * Parses the raw CSV text using PapaParse.
  */
 function parseCSV(csvText) {
-  // Columns expected: Date, Amount, Description, Category, Subcategory, Tags, Notes
-  Papa.parse(csvText, {
+  // Remove BOM if present
+  const cleanCsvText = csvText.replace(/^\uFEFF/, '');
+  
+  const results = Papa.parse(cleanCsvText, {
     header: true,
     skipEmptyLines: true,
-    complete: function(results) {
-      state.transactions = results.data.map(row => ({
-        id: crypto.randomUUID(), // Assign unique runtime ID
+    transformHeader: (h) => h.trim(), // Trim headers to avoid hidden spaces
+  });
+
+  if (results.errors.length > 0) {
+    console.error("PapaParse errors:", results.errors);
+    alert("Error parsing CSV file. Please check the file format.");
+    return false;
+  }
+
+  // Check headers
+  const headers = results.meta.fields;
+  const missingHeaders = REQUIRED_HEADERS.filter(h => !headers.includes(h));
+  
+  if (missingHeaders.length > 0) {
+    console.error("Missing headers:", missingHeaders);
+    console.log("Found headers:", headers);
+    alert(`Incompatible file! Missing required columns: ${missingHeaders.join(", ")}`);
+    return false;
+  }
+
+  state.transactions = results.data.map((row, index) => {
+    try {
+      return {
+        id: crypto.randomUUID(),
         DateTime: row.DateTime || '',
         Amount: parseFloat(row.Amount) || 0,
         Description: row.Description || '',
@@ -201,9 +227,15 @@ function parseCSV(csvText) {
         Subcategory: row.Subcategory || '',
         Tags: row.Tags || '',
         Notes: row.Notes || ''
-      }));
+      };
+    } catch (e) {
+      console.error(`Error mapping row ${index}:`, e, row);
+      return null;
     }
-  });
+  }).filter(t => t !== null);
+
+  console.log(`Successfully parsed ${state.transactions.length} transactions.`);
+  return true;
 }
 
 /**
@@ -214,19 +246,19 @@ export async function saveFile() {
     alert("No file available to save.");
     return;
   }
-  
+
   try {
     // Strip the internal 'id' before unparsing to CSV
     const dataToSave = state.transactions.map(t => {
       const { id, ...rest } = t;
       return rest;
     });
-    
+
     // Explicitly order columns to match the required format
     const csvContent = Papa.unparse(dataToSave, {
       columns: ["DateTime", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"]
     });
-    
+
     if (state.fileHandle && window.showSaveFilePicker) {
       const writable = await state.fileHandle.createWritable();
       await writable.write(csvContent);
@@ -244,10 +276,10 @@ export async function saveFile() {
       document.body.removeChild(link);
       showStatusMessage("File downloaded!");
     }
-    
+
     // Commit changes to original state
     state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
-    
+
     clearUnsavedChanges();
     renderApp(); // Ensure UI is refreshed and remains in app view
   } catch (error) {
@@ -264,7 +296,7 @@ function closeFile() {
     const confirmClose = confirm("You have unsaved changes. Are you sure you want to close the file?");
     if (!confirmClose) return;
   }
-  
+
   state.fileHandle = null;
   state.fileName = '';
   state.transactions = [];
