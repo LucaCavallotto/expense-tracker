@@ -3,11 +3,66 @@ import { state } from './app.js';
 let pieChartInstance = null;
 let barChartInstance = null;
 
+let periodListenerAttached = false;
+
 /**
  * Reads application transactions, computes analytics, and updates charts and text summaries.
  */
 export function renderAnalytics() {
-  const transactions = state.transactions;
+  if (!periodListenerAttached) {
+    const periodSelect = document.getElementById('analyticsTimePeriod');
+    const monthSelect = document.getElementById('analyticsSpecificMonth');
+    if (periodSelect) {
+      periodSelect.addEventListener('change', () => {
+        handlePeriodChange();
+        renderAnalytics();
+      });
+      periodListenerAttached = true;
+    }
+    if (monthSelect) {
+      monthSelect.addEventListener('change', renderAnalytics);
+    }
+  }
+
+  const periodSelect = document.getElementById('analyticsTimePeriod');
+  const period = periodSelect ? periodSelect.value : 'overall';
+  const monthSelect = document.getElementById('analyticsSpecificMonth');
+  
+  let transactions = state.transactions;
+  let periodLabel = 'Overall';
+
+  // Filter based on period
+  if (period !== 'overall') {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    transactions = state.transactions.filter(t => {
+      const tDate = new Date(t.Date);
+      if (isNaN(tDate)) return false;
+
+      if (period === 'current_month') {
+        periodLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+        return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+      } else if (period === 'specific_month') {
+        const selectedVal = monthSelect.value; // format "YYYY-MM"
+        if (!selectedVal) return true;
+        const [y, m] = selectedVal.split('-').map(Number);
+        periodLabel = new Date(y, m - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+        return tDate.getFullYear() === y && (tDate.getMonth() + 1) === m;
+      } else {
+        let monthsBack = 0;
+        if (period === 'last_3_months') monthsBack = 3;
+        else if (period === 'last_6_months') monthsBack = 6;
+        else if (period === 'last_12_months') monthsBack = 12;
+        
+        periodLabel = `Last ${monthsBack} Months`;
+        const cutoffDate = new Date();
+        cutoffDate.setMonth(now.getMonth() - monthsBack);
+        return tDate >= cutoffDate;
+      }
+    });
+  }
   
   let totalIncome = 0;
   let totalExpenses = 0;
@@ -49,8 +104,13 @@ export function renderAnalytics() {
   }
   
   // Redraw charts with updated metrics
+  const categoryTitle = document.querySelector('#categoryPieChart').closest('.card').querySelector('.card-title');
+  if (categoryTitle) {
+    categoryTitle.textContent = `Expenses by Category (${periodLabel})`;
+  }
+
   updatePieChart(categoryExpenses);
-  updateBarChart(totalIncome, totalExpenses);
+  updateBarChart(totalIncome, totalExpenses, periodLabel);
 }
 
 /**
@@ -94,6 +154,17 @@ function updatePieChart(categoryExpenses) {
       plugins: {
         legend: {
           position: 'right',
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return ` ${label}: €${value.toFixed(2)} (${percentage}%)`;
+            }
+          }
         }
       }
     }
@@ -103,7 +174,7 @@ function updatePieChart(categoryExpenses) {
 /**
  * Creates or updates the overview bar chart displaying Total Income vs Total Expenses.
  */
-function updateBarChart(totalIncome, totalExpenses) {
+function updateBarChart(totalIncome, totalExpenses, periodLabel) {
   const ctx = document.getElementById('incomeVsExpenseChart').getContext('2d');
   
   if (barChartInstance) {
@@ -117,7 +188,7 @@ function updateBarChart(totalIncome, totalExpenses) {
   barChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Overview'],
+      labels: [periodLabel],
       datasets: [
         {
           label: 'Total Income',
@@ -151,4 +222,61 @@ function updateBarChart(totalIncome, totalExpenses) {
       }
     }
   });
+}
+
+/**
+ * Handles showing/hiding additional controls when the time period changes.
+ */
+function handlePeriodChange() {
+  const period = document.getElementById('analyticsTimePeriod').value;
+  const monthContainer = document.getElementById('monthSelectContainer');
+  
+  if (period === 'specific_month') {
+    populateAvailableMonths();
+    monthContainer.classList.remove('d-none');
+  } else {
+    monthContainer.classList.add('d-none');
+  }
+}
+
+/**
+ * Scans transactions to find all unique months and populates the specific month dropdown.
+ */
+function populateAvailableMonths() {
+  const monthSelect = document.getElementById('analyticsSpecificMonth');
+  if (!monthSelect) return;
+  
+  // Find unique months
+  const months = new Set();
+  state.transactions.forEach(t => {
+    if (t.Date) {
+      const date = new Date(t.Date);
+      if (!isNaN(date)) {
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        months.add(key);
+      }
+    }
+  });
+  
+  // Sort descending
+  const sortedMonths = Array.from(months).sort().reverse();
+  
+  const currentSelection = monthSelect.value;
+  monthSelect.innerHTML = '';
+  
+  sortedMonths.forEach(m => {
+    const [year, month] = m.split('-');
+    const date = new Date(year, month - 1);
+    const label = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = label;
+    monthSelect.appendChild(opt);
+  });
+  
+  // Try to restore selection or default to first
+  if (currentSelection && sortedMonths.includes(currentSelection)) {
+    monthSelect.value = currentSelection;
+  }
 }
