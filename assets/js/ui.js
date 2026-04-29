@@ -280,7 +280,7 @@ function renderHomeSection() {
       .sort((a, b) => new Date(b.Date) - new Date(a.Date))
       .slice(0, 5);
     
-    recent.forEach((t) => {
+    recent.forEach((t, index) => {
       const tr = document.createElement('tr');
       const isIncome = t.Amount >= 0;
       const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
@@ -288,6 +288,7 @@ function renderHomeSection() {
       const meta = getCategoryMeta(t.Category);
       
       tr.className = 'mobile-row-click';
+      if (index % 2 === 1) tr.classList.add('bg-body-tertiary');
       tr.setAttribute('data-id', t.id);
       
       tr.innerHTML = `
@@ -388,6 +389,7 @@ export function renderTransactions() {
   const isDateSorted = state.sort.column === 'Date';
   
   // Build and insert DOM rows
+  let txCounter = 0;
   sorted.forEach((t) => {
     if (isDateSorted && t.Date !== lastDate) {
       const headerTr = document.createElement('tr');
@@ -403,7 +405,9 @@ export function renderTransactions() {
 
     const tr = document.createElement('tr');
     tr.className = 'mobile-row-click';
+    if (txCounter % 2 === 1) tr.classList.add('bg-body-tertiary');
     tr.setAttribute('data-id', t.id);
+    txCounter++;
     
     const isIncome = t.Amount >= 0;
     const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;

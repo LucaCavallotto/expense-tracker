@@ -131,7 +131,6 @@ footer {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    background-color: var(--bs-body-bg);
     border-radius: 0;
     padding: 0;
     margin-bottom: 0;
