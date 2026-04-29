@@ -192,6 +192,41 @@ export function setupUIEvents() {
       }
     });
   }
+
+  // Selection Mode Events
+  const btnSelectMode = document.getElementById('btnSelectMode');
+  if (btnSelectMode) {
+    btnSelectMode.addEventListener('click', () => toggleSelectionMode(true));
+  }
+
+  const btnCancelSelection = document.getElementById('btnCancelSelection');
+  if (btnCancelSelection) {
+    btnCancelSelection.addEventListener('click', () => toggleSelectionMode(false));
+  }
+
+  const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', (e) => {
+      const isChecked = e.target.checked;
+      if (isChecked) {
+        state.selectedIds = state.transactions.map(t => t.id);
+      } else {
+        state.selectedIds = [];
+      }
+      renderTransactions();
+      updateSelectedCount();
+    });
+  }
+
+  const btnBulkDelete = document.getElementById('btnBulkDelete');
+  if (btnBulkDelete) {
+    btnBulkDelete.addEventListener('click', handleBulkDelete);
+  }
+
+  const btnBulkApplyCategory = document.getElementById('btnBulkApplyCategory');
+  if (btnBulkApplyCategory) {
+    btnBulkApplyCategory.addEventListener('click', handleBulkApplyCategory);
+  }
 }
 
 /**
@@ -225,6 +260,8 @@ export function renderApp() {
     if (inputSearch) inputSearch.value = '';
     const btnClear = document.getElementById('btnClearSearch');
     if (btnClear) btnClear.classList.add('d-none');
+    
+    toggleSelectionMode(false);
   }
 }
 
@@ -233,14 +270,18 @@ export function renderApp() {
  */
 function populateCategoriesDropdown() {
   const select = document.getElementById('inputCategory');
-  select.innerHTML = '<option value="" disabled selected>Select Category</option>';
+  const bulkSelect = document.getElementById('bulkCategorySelect');
   
+  const options = '<option value="" disabled selected>Select Category</option>';
+  const bulkOptions = '<option value="" disabled selected>Choose...</option>';
+  
+  let optionsHtml = '';
   Object.keys(state.categories).forEach(cat => {
-    const opt = document.createElement('option');
-    opt.value = cat;
-    opt.textContent = cat;
-    select.appendChild(opt);
+    optionsHtml += `<option value="${cat}">${cat}</option>`;
   });
+
+  if (select) select.innerHTML = options + optionsHtml;
+  if (bulkSelect) bulkSelect.innerHTML = bulkOptions + optionsHtml;
 }
 
 /**
@@ -355,7 +396,7 @@ export function renderTransactions() {
         const yearTr = document.createElement('tr');
         yearTr.className = 'year-divider-row divider-row';
         yearTr.innerHTML = `
-          <td colspan="8" class="p-2 text-center text-muted fw-bold small text-uppercase border-0">
+          <td colspan="9" class="p-2 text-center text-muted fw-bold small text-uppercase border-0">
             — ${year} —
           </td>
         `;
@@ -371,7 +412,7 @@ export function renderTransactions() {
         const monthTr = document.createElement('tr');
         monthTr.className = 'month-divider-row divider-row';
         monthTr.innerHTML = `
-          <td colspan="8" class="px-3 py-2 text-primary fw-semibold small text-uppercase border-0" style="background-color: var(--bs-secondary-bg); opacity: 0.9;">
+          <td colspan="9" class="px-3 py-2 text-primary fw-semibold small text-uppercase border-0" style="background-color: var(--bs-secondary-bg); opacity: 0.9;">
             ${monthName}
           </td>
         `;
@@ -391,8 +432,14 @@ export function renderTransactions() {
     const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
     const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
     const meta = getCategoryMeta(t.Category);
+    const isSelected = state.selectedIds.includes(t.id);
     
     tr.innerHTML = `
+      <!-- Selection Checkbox -->
+      <td class="selection-column ${state.isSelectionMode ? '' : 'd-none'} text-center">
+        <input type="checkbox" class="form-check-input transaction-checkbox" data-id="${t.id}" ${isSelected ? 'checked' : ''}>
+      </td>
+
       <!-- Desktop Layout -->
       <td class="d-none d-md-table-cell">${formatDate(t.DateTime)}</td>
       <td class="d-none d-md-table-cell ${amountClass}">${amountStr}</td>
@@ -402,13 +449,13 @@ export function renderTransactions() {
       <td class="d-none d-xl-table-cell">${(t.Tags || '').split(',').filter(tag => tag.trim()).map(tag => `<span class="badge rounded-pill text-bg-light border text-dark me-1" style="font-weight: 500;">${tag.trim()}</span>`).join('')}</td>
       <td class="d-none d-xl-table-cell">${t.Notes}</td>
       <td class="text-end text-nowrap d-none d-md-table-cell">
-        <button class="btn btn-sm btn-outline-primary me-1 btn-edit" data-id="${t.id}">Edit</button>
-        <button class="btn btn-sm btn-outline-danger btn-del" data-id="${t.id}">Del</button>
+        <button class="btn btn-sm btn-outline-primary me-1 btn-edit ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Edit</button>
+        <button class="btn btn-sm btn-outline-danger btn-del ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Del</button>
       </td>
       
       <!-- Mobile Layout -->
       <td class="d-md-none mobile-visible w-100 p-0 border-0">
-        <div class="d-flex align-items-center w-100 p-2">
+        <div class="d-flex align-items-center w-100 p-2 ${isSelected && state.isSelectionMode ? 'bg-primary-subtle' : ''}">
           <div style="width: 44px; flex-shrink: 0;">
             <div class="category-icon shadow-sm ${meta.color}">
               <i class="bi ${meta.icon}"></i>
@@ -433,7 +480,21 @@ export function renderTransactions() {
   tbody.querySelectorAll('.mobile-row-click').forEach(row => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('button')) return; // Ignore if clicking a button inside (like desktop edit/del)
-      editTransaction(row.getAttribute('data-id'));
+      
+      const id = row.getAttribute('data-id');
+      if (state.isSelectionMode) {
+        toggleIdSelection(id);
+      } else {
+        editTransaction(id);
+      }
+    });
+  });
+
+  // Checkbox click
+  tbody.querySelectorAll('.transaction-checkbox').forEach(cb => {
+    cb.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleIdSelection(cb.getAttribute('data-id'));
     });
   });
   
@@ -453,6 +514,72 @@ export function renderTransactions() {
   
   // Cascade update to Analytics when data changes
   renderAnalytics();
+}
+
+function toggleSelectionMode(enabled) {
+  state.isSelectionMode = enabled;
+  state.selectedIds = [];
+  
+  const bulkMenu = document.getElementById('bulkActionsMenu');
+  const btnSelect = document.getElementById('btnSelectMode');
+  const btnAdd = document.getElementById('btnAddExpense');
+  const selectionCols = document.querySelectorAll('.selection-column');
+  const selectAllCheck = document.getElementById('selectAllCheckbox');
+  
+  if (bulkMenu) bulkMenu.classList.toggle('d-none', !enabled);
+  if (btnSelect) btnSelect.classList.toggle('d-none', enabled);
+  if (btnAdd) btnAdd.classList.toggle('d-none', enabled);
+  
+  selectionCols.forEach(col => col.classList.toggle('d-none', !enabled));
+  if (selectAllCheck) selectAllCheck.checked = false;
+  
+  updateSelectedCount();
+  renderTransactions();
+}
+
+function updateSelectedCount() {
+  const countEl = document.getElementById('selectedCount');
+  if (countEl) {
+    countEl.textContent = state.selectedIds.length;
+  }
+  
+  const bulkApplyBtn = document.getElementById('btnBulkApplyCategory');
+  const bulkDeleteBtn = document.getElementById('btnBulkDelete');
+  const hasSelection = state.selectedIds.length > 0;
+  
+  if (bulkApplyBtn) bulkApplyBtn.disabled = !hasSelection;
+  if (bulkDeleteBtn) bulkDeleteBtn.disabled = !hasSelection;
+}
+
+function handleBulkDelete() {
+  if (state.selectedIds.length === 0) return;
+  
+  if (confirm(`Are you sure you want to delete ${state.selectedIds.length} transactions?`)) {
+    const idsToDelete = new Set(state.selectedIds);
+    state.transactions = state.transactions.filter(t => !idsToDelete.has(t.id));
+    
+    markUnsavedChanges();
+    toggleSelectionMode(false);
+    showStatusMessage(`Deleted ${idsToDelete.size} transactions`, 'danger');
+  }
+}
+
+function handleBulkApplyCategory() {
+  const category = document.getElementById('bulkCategorySelect').value;
+  if (!category || state.selectedIds.length === 0) return;
+  
+  if (confirm(`Apply category "${category}" to ${state.selectedIds.length} transactions?`)) {
+    const idsToUpdate = new Set(state.selectedIds);
+    state.transactions.forEach(t => {
+      if (idsToUpdate.has(t.id)) {
+        t.Category = category;
+      }
+    });
+    
+    markUnsavedChanges();
+    toggleSelectionMode(false);
+    showStatusMessage(`Updated category for ${idsToUpdate.size} transactions`);
+  }
 }
 
 /**
@@ -489,6 +616,24 @@ function editTransaction(id) {
   if (btnDelete) btnDelete.classList.remove('d-none');
   
   if (expenseModalInstance) expenseModalInstance.show();
+}
+
+function toggleIdSelection(id) {
+  const index = state.selectedIds.indexOf(id);
+  if (index === -1) {
+    state.selectedIds.push(id);
+  } else {
+    state.selectedIds.splice(index, 1);
+  }
+  
+  // Sync the Select All checkbox
+  const selectAllCheck = document.getElementById('selectAllCheckbox');
+  if (selectAllCheck) {
+    selectAllCheck.checked = state.selectedIds.length === state.transactions.length && state.transactions.length > 0;
+  }
+  
+  renderTransactions();
+  updateSelectedCount();
 }
 
 /**

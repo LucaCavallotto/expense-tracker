@@ -7,7 +7,9 @@ export const state = {
   categories: {},
   sort: { column: 'Date', direction: 'desc' },
   searchQuery: '',
-  allTags: []
+  allTags: [],
+  isSelectionMode: false,
+  selectedIds: []
 };
 
 export function markUnsavedChanges() {
