@@ -299,23 +299,20 @@ function renderHomeSection() {
         
         <!-- Mobile Layout -->
         <td class="d-md-none mobile-visible w-100 p-0 border-0">
-          <div class="d-flex align-items-center w-100 p-3">
-            <div style="width: 50px;">
-              <div class="category-icon shadow-sm ${meta.color} position-relative">
+          <div class="d-flex align-items-center w-100 p-2">
+            <div style="width: 44px; flex-shrink: 0;">
+              <div class="category-icon shadow-sm ${meta.color}">
                 <i class="bi ${meta.icon}"></i>
-                <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1" style="width: 14px; height: 14px; transform: translate(25%, 25%);">
-                   <i class="bi bi-check text-white d-flex align-items-center justify-content-center" style="font-size: 8px; line-height: 1;"></i>
-                </span>
               </div>
             </div>
-            <div class="flex-grow-1 ms-3">
-              <div class="fw-bold" style="font-size: 1.05rem;">${t.Description}</div>
-              <div class="text-muted small">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
-              ${t.Notes ? `<div class="text-muted small">${t.Notes}</div>` : ''}
+            <div class="flex-grow-1 ms-3 overflow-hidden" style="min-width: 0;">
+              <div class="fw-bold text-truncate" style="font-size: 1.05rem;">${t.Description}</div>
+              <div class="text-muted small text-truncate">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
+              ${t.Notes ? `<div class="text-muted small text-truncate">${t.Notes}</div>` : ''}
             </div>
-            <div class="text-end">
-              <div class="${amountClass}" style="font-size: 1.1rem;">${amountStr}</div>
-              <div class="text-muted small mt-1">${t.Time ? t.Time : formatDate(t.Date)}</div>
+            <div class="text-end ms-2" style="flex-shrink: 0;">
+              <div class="${amountClass} text-nowrap" style="font-size: 1.1rem;">${amountStr}</div>
+              <div class="text-muted small mt-1 text-nowrap">${formatDate(t.Date)}</div>
             </div>
           </div>
         </td>
@@ -425,17 +422,6 @@ export function renderTransactions() {
         lastMonth = month;
       }
 
-      if (t.Date !== lastDate) {
-        const headerTr = document.createElement('tr');
-        headerTr.className = 'date-header-row divider-row d-md-none';
-        headerTr.innerHTML = `
-          <td colspan="8" class="px-3 pt-2 pb-0 text-muted fw-normal small w-100 border-0">
-            ${formatDate(t.Date)}
-          </td>
-        `;
-        tbody.appendChild(headerTr);
-        lastDate = t.Date;
-      }
     }
 
     const tr = document.createElement('tr');
@@ -465,23 +451,20 @@ export function renderTransactions() {
       
       <!-- Mobile Layout -->
       <td class="d-md-none mobile-visible w-100 p-0 border-0">
-        <div class="d-flex align-items-center w-100 p-3">
-          <div style="width: 50px;">
-            <div class="category-icon shadow-sm ${meta.color} position-relative">
+        <div class="d-flex align-items-center w-100 p-2">
+          <div style="width: 44px; flex-shrink: 0;">
+            <div class="category-icon shadow-sm ${meta.color}">
               <i class="bi ${meta.icon}"></i>
-              <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle p-1" style="width: 14px; height: 14px; transform: translate(25%, 25%);">
-                 <i class="bi bi-check text-white d-flex align-items-center justify-content-center" style="font-size: 8px; line-height: 1;"></i>
-              </span>
             </div>
           </div>
-          <div class="flex-grow-1 ms-3">
-            <div class="fw-bold" style="font-size: 1.05rem;">${t.Description}</div>
-            <div class="text-muted small">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
-            ${t.Notes ? `<div class="text-muted small">${t.Notes}</div>` : ''}
+          <div class="flex-grow-1 ms-3 overflow-hidden" style="min-width: 0;">
+            <div class="fw-bold text-truncate" style="font-size: 1.05rem;">${t.Description}</div>
+            <div class="text-muted small text-truncate">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
+            ${t.Notes ? `<div class="text-muted small text-truncate">${t.Notes}</div>` : ''}
           </div>
-          <div class="text-end">
-            <div class="${amountClass}" style="font-size: 1.1rem;">${amountStr}</div>
-            <div class="text-muted small mt-1">${t.Time ? t.Time : formatDate(t.Date)}</div>
+          <div class="text-end ms-2" style="flex-shrink: 0;">
+            <div class="${amountClass} text-nowrap" style="font-size: 1.1rem;">${amountStr}</div>
+            <div class="text-muted small mt-1 text-nowrap">${formatDate(t.Date)}</div>
           </div>
         </div>
       </td>

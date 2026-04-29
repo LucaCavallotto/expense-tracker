@@ -167,6 +167,10 @@ footer {
     display: block !important;
     width: 100%;
   }
+  #appTabsContent {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 }
 
 /* Divider Rows Global */
