@@ -26,6 +26,7 @@ A modular, browser-based personal finance manager that works directly with your 
 ### 1. Getting Started
 Simply open the `index.html` file in any modern web browser.
 - **New Users:** Click **"Create New File"** to generate a fresh expense CSV on your computer.
+- **Trial:** You can also use the included `example_data.csv` to explore the app's features immediately.
 - **Existing Users:** Click **"Browse Files"** or simply **Drag & Drop** your existing CSV anywhere on the screen.
 
 ### 2. Adding Transactions
@@ -44,14 +45,11 @@ There are two ways to add expenses:
 ### 4. Categorization
 Categories and subcategories are loaded from `data/categories.json`. You can customize this file to match your personal spending habits.
 
-## CSV Data Format
-
 The application expects a CSV file with the following header and column order:
 
-`Date, Time, Amount, Description, Category, Subcategory, Tags, Notes`
+`DateTime, Amount, Description, Category, Subcategory, Tags, Notes`
 
-- **Date:** (Required) Format `YYYY-MM-DD`.
-- **Time:** (Optional) Format `HH:MM:SS`.
+- **DateTime:** (Required) ISO 8601 format (e.g., `2026-04-29T13:00:00+02:00`).
 - **Amount:** (Required) Numeric value. Use negative for expenses and positive for income.
 - **Description:** (Required) A brief text about the transaction.
 - **Category / Subcategory:** Used for organization and filtering.
@@ -60,8 +58,9 @@ The application expects a CSV file with the following header and column order:
 
 When you use **"Create New File"**, the app automatically generates a file with these headers for you.
 
-## Privacy & Security
 This application is entirely client-side. Your financial data never leaves your computer and is never uploaded to any server. All processing happens locally in your browser.
+
+**Privacy Note:** The project includes a `.gitignore` rule that prevents any CSV files (except the provided `example_data.csv`) from being uploaded to Git repositories, providing an extra layer of protection for your personal data.
 
 ---
 *"Cash Rules Everything Around Me"*

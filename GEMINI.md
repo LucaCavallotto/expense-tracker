@@ -5,7 +5,7 @@ A modular, privacy-first, browser-based personal finance manager that interacts 
 ---
 
 ## Project Overview
-**Expense Tracker** is a single-page application (SPA) designed to manage personal finances without cloud dependency. It leverages the **File System Access API** to read and write directly to the user's local disk, ensuring 100% data privacy.
+**Expense Tracker** is a single-page application (SPA) designed to manage personal finances without cloud dependency. It leverages the **File System Access API** to read and write directly to the user's local disk, ensuring 100% data privacy. A `.gitignore` policy is in place to prevent accidental upload of any `.csv` files (except the provided `example_data.csv`).
 
 **Core User Flow:**
 1.  **Entry:** Create a new CSV or open/drag-and-drop an existing one.
