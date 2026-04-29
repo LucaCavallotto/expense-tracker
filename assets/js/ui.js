@@ -385,22 +385,57 @@ export function renderTransactions() {
 
   tbody.innerHTML = '';
   
+  let lastYear = null;
+  let lastMonth = null;
   let lastDate = null;
   const isDateSorted = state.sort.column === 'Date';
   
   // Build and insert DOM rows
   let txCounter = 0;
   sorted.forEach((t) => {
-    if (isDateSorted && t.Date !== lastDate) {
-      const headerTr = document.createElement('tr');
-      headerTr.className = 'date-header-row d-md-none bg-transparent';
-      headerTr.innerHTML = `
-        <td colspan="8" class="p-3 pb-1 text-muted fw-bold small text-uppercase w-100 border-0" style="background: transparent;">
-          ${formatDate(t.Date)}
-        </td>
-      `;
-      tbody.appendChild(headerTr);
-      lastDate = t.Date;
+    if (isDateSorted && t.Date) {
+      const year = t.Date.substring(0, 4);
+      const month = t.Date.substring(5, 7);
+
+      if (year !== lastYear) {
+        const yearTr = document.createElement('tr');
+        yearTr.className = 'year-divider-row divider-row';
+        yearTr.innerHTML = `
+          <td colspan="8" class="p-2 text-center text-muted fw-bold small text-uppercase border-0">
+            — ${year} —
+          </td>
+        `;
+        tbody.appendChild(yearTr);
+        lastYear = year;
+        lastMonth = null; // Reset month when year changes
+      }
+
+      if (month !== lastMonth) {
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const monthName = monthNames[parseInt(month, 10) - 1] || month;
+        
+        const monthTr = document.createElement('tr');
+        monthTr.className = 'month-divider-row divider-row';
+        monthTr.innerHTML = `
+          <td colspan="8" class="px-3 py-2 text-primary fw-semibold small text-uppercase border-0" style="background-color: var(--bs-secondary-bg); opacity: 0.9;">
+            ${monthName}
+          </td>
+        `;
+        tbody.appendChild(monthTr);
+        lastMonth = month;
+      }
+
+      if (t.Date !== lastDate) {
+        const headerTr = document.createElement('tr');
+        headerTr.className = 'date-header-row divider-row d-md-none';
+        headerTr.innerHTML = `
+          <td colspan="8" class="px-3 pt-2 pb-0 text-muted fw-normal small w-100 border-0">
+            ${formatDate(t.Date)}
+          </td>
+        `;
+        tbody.appendChild(headerTr);
+        lastDate = t.Date;
+      }
     }
 
     const tr = document.createElement('tr');

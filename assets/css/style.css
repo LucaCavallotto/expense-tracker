@@ -156,4 +156,23 @@ footer {
   .transaction-table td:not(.mobile-visible) {
     display: none;
   }
+  .transaction-table tr.divider-row {
+    display: block;
+    border-bottom: none;
+  }
+  .transaction-table tr.divider-row:active {
+    background-color: transparent;
+  }
+  .transaction-table tr.divider-row td {
+    display: block !important;
+    width: 100%;
+  }
+}
+
+/* Divider Rows Global */
+.divider-row td {
+  letter-spacing: 0.5px;
+}
+[data-bs-theme="dark"] .month-divider-row td {
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
