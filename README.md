@@ -2,7 +2,7 @@
 
 A modular, browser-based personal finance manager that works directly with your local CSV files. This application puts you in control of your data—no cloud required, no sign-ups, just privacy-focused financial tracking.
 
-## 🚀 Key Features
+## Key Features
 
 - **Direct File Access:** Uses the modern File System Access API to open and save CSV files directly to your device.
 - **Bulk Entry:** Smart "Quick Inline Entry" supports pasting multiple transactions at once (e.g., from bank statements).
@@ -11,7 +11,7 @@ A modular, browser-based personal finance manager that works directly with your 
 - **Advanced Search & Sorting:** Quickly find transactions by description or sort by any column.
 - **Dark Mode Support:** Automatically syncs with your system's light/dark preference.
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 ├── assets/
@@ -21,7 +21,7 @@ A modular, browser-based personal finance manager that works directly with your 
 └── index.html      # Main application entry point
 ```
 
-## 🛠️ How to Use
+## How to Use
 
 ### 1. Getting Started
 Simply open the `index.html` file in any modern web browser.
