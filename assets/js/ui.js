@@ -167,6 +167,19 @@ export function setupUIEvents() {
       renderTransactions();
     });
   }
+
+  // Tags Suggestions
+  const inputTags = document.getElementById('inputTags');
+  if (inputTags) {
+    inputTags.addEventListener('input', (e) => showTagSuggestions(e.target.value));
+    inputTags.addEventListener('focus', (e) => showTagSuggestions(e.target.value));
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!inputTags.contains(e.target) && !document.getElementById('tagsSuggestionBox').contains(e.target)) {
+        document.getElementById('tagsSuggestionBox').classList.add('d-none');
+      }
+    });
+  }
 }
 
 /**
@@ -186,6 +199,7 @@ export function renderApp() {
     currentFileName.textContent = state.fileName;
     
     populateCategoriesDropdown();
+    updateAllTags();
     renderTransactions();
     renderHomeSection();
   } else {
@@ -442,7 +456,7 @@ export function renderTransactions() {
       <td class="d-none d-md-table-cell">${t.Description}</td>
       <td class="d-none d-lg-table-cell"><span class="badge bg-secondary">${t.Category || 'Uncategorized'}</span></td>
       <td class="d-none d-lg-table-cell">${t.Subcategory}</td>
-      <td class="d-none d-xl-table-cell">${t.Tags}</td>
+      <td class="d-none d-xl-table-cell">${(t.Tags || '').split(',').filter(tag => tag.trim()).map(tag => `<span class="badge rounded-pill text-bg-light border text-dark me-1" style="font-weight: 500;">${tag.trim()}</span>`).join('')}</td>
       <td class="d-none d-xl-table-cell">${t.Notes}</td>
       <td class="text-end text-nowrap d-none d-md-table-cell">
         <button class="btn btn-sm btn-outline-primary me-1 btn-edit" data-id="${t.id}">Edit</button>
@@ -588,11 +602,15 @@ function handleTransactionSubmit(e) {
     const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
     const Description = document.getElementById('inputDescription').value;
     
+    // Normalize Tags: Comma-separated, unique, trimmed
+    const cleanedTags = (Tags || '').split(',').map(t => t.trim()).filter(t => t);
+    const finalTags = [...new Set(cleanedTags)].join(', ');
+
     if (id) {
       // Perform Edit
       const index = state.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
-        state.transactions[index] = { id, Date: DateVal, Time: TimeVal, Amount, Description, Category, Subcategory, Tags, Notes };
+        state.transactions[index] = { id, Date: DateVal, Time: TimeVal, Amount, Description, Category, Subcategory, Tags: finalTags, Notes };
       }
     } else {
       // Perform Add
@@ -604,14 +622,108 @@ function handleTransactionSubmit(e) {
         Description,
         Category,
         Subcategory,
-        Tags,
+        Tags: finalTags,
         Notes
       });
     }
   }
   
+  updateAllTags();
   markUnsavedChanges();
   if (expenseModalInstance) expenseModalInstance.hide();
   
   renderTransactions();
+}
+
+/**
+ * Updates the global list of unique tags from all transactions.
+ */
+function updateAllTags() {
+  const tagsSet = new Set();
+  state.transactions.forEach(t => {
+    if (t.Tags) {
+      t.Tags.split(',').forEach(tag => {
+        if (tag.trim()) tagsSet.add(tag.trim());
+      });
+    }
+  });
+  state.allTags = Array.from(tagsSet).sort();
+}
+
+/**
+ * Shows suggestions for the current word being typed in the tags input.
+ */
+function showTagSuggestions(inputVal) {
+  const box = document.getElementById('tagsSuggestionBox');
+  const input = document.getElementById('inputTags');
+  
+  // Find the tag currently being typed (at cursor position)
+  const cursorPos = input.selectionStart;
+  const textBefore = inputVal.substring(0, cursorPos);
+  const parts = textBefore.split(',');
+  const currentPart = parts[parts.length - 1].trimStart().toLowerCase();
+  
+  if (!currentPart || currentPart.length < 1) {
+    box.classList.add('d-none');
+    return;
+  }
+  
+  const matches = state.allTags.filter(tag => 
+    tag.toLowerCase().startsWith(currentPart) && 
+    !inputVal.toLowerCase().includes(tag.toLowerCase()) // Don't suggest if already present
+  ).slice(0, 5); // Limit to 5 suggestions
+  
+  if (matches.length === 0) {
+    box.classList.add('d-none');
+    return;
+  }
+  
+  box.innerHTML = '';
+  matches.forEach(match => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'list-group-item list-group-item-action py-2 small';
+    item.textContent = match;
+    item.addEventListener('click', () => applyTagSuggestion(match));
+    box.appendChild(item);
+  });
+  
+  box.classList.remove('d-none');
+}
+
+/**
+ * Replaces the current word in the tags input with the selected suggestion.
+ */
+function applyTagSuggestion(suggestion) {
+  const input = document.getElementById('inputTags');
+  const val = input.value;
+  const cursorPos = input.selectionStart;
+  
+  // Split entire value into tags
+  const tags = val.split(',');
+  
+  // Find which tag index the cursor is currently in
+  let accumulated = 0;
+  let tagIndex = 0;
+  for (let i = 0; i < tags.length; i++) {
+    accumulated += tags[i].length;
+    if (cursorPos <= accumulated) {
+      tagIndex = i;
+      break;
+    }
+    accumulated += 1; // Account for the comma
+    tagIndex = i;
+  }
+  
+  // Replace the active tag with the suggestion
+  tags[tagIndex] = (tagIndex > 0 ? ' ' : '') + suggestion;
+  
+  // Filter out empty parts, trim each tag, then join with comma and space
+  const cleanedTags = tags.map(t => t.trim()).filter(t => t);
+  const finalVal = [...new Set(cleanedTags)].join(', ');
+  
+  input.value = finalVal + (finalVal ? ', ' : '');
+  input.focus();
+  
+  document.getElementById('tagsSuggestionBox').classList.add('d-none');
 }

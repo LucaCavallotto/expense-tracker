@@ -337,10 +337,13 @@
               </div>
             </div>
 
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
               <label for="inputTags" class="form-label">Tags</label>
               <input type="text" class="form-control" id="inputTags"
-                placeholder="Comma separated, e.g. urgent, business">
+                placeholder="Comma separated, e.g. holiday, mountain" autocomplete="off">
+              <div id="tagsSuggestionBox" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1050; max-height: 200px; overflow-y: auto;">
+                <!-- Suggestions populated via JS -->
+              </div>
             </div>
 
             <div class="mb-3">

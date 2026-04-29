@@ -180,3 +180,21 @@ footer {
 [data-bs-theme="dark"] .month-divider-row td {
   background-color: rgba(255, 255, 255, 0.05) !important;
 }
+
+/* Tags Suggestion Box */
+#tagsSuggestionBox {
+  background-color: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1100;
+}
+
+#tagsSuggestionBox .list-group-item {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#tagsSuggestionBox .list-group-item:hover {
+  background-color: var(--bs-secondary-bg);
+}

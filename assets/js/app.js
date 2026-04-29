@@ -6,7 +6,8 @@ export const state = {
   hasUnsavedChanges: false,
   categories: {},
   sort: { column: 'Date', direction: 'desc' },
-  searchQuery: ''
+  searchQuery: '',
+  allTags: []
 };
 
 export function markUnsavedChanges() {
