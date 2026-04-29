@@ -193,7 +193,7 @@ export function renderApp() {
     landingView.classList.remove('d-none');
     appView.classList.add('d-none');
     navActions.classList.add('d-none');
-    currentFileName.textContent = 'No file opened';
+    currentFileName.textContent = '';
     
     // Clear search input on close
     const inputSearch = document.getElementById('inputSearchTransaction');
