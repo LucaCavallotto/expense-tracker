@@ -1,5 +1,5 @@
 import { state, clearUnsavedChanges } from './app.js';
-import { renderApp } from './ui.js';
+import { renderApp, showStatusMessage } from './ui.js';
 
 /**
  * Loads the categories JSON asynchronously.
@@ -194,8 +194,7 @@ function parseCSV(csvText) {
     complete: function(results) {
       state.transactions = results.data.map(row => ({
         id: crypto.randomUUID(), // Assign unique runtime ID
-        Date: row.Date || '',
-        Time: row.Time || '',
+        DateTime: row.DateTime || '',
         Amount: parseFloat(row.Amount) || 0,
         Description: row.Description || '',
         Category: row.Category || '',
@@ -225,14 +224,14 @@ export async function saveFile() {
     
     // Explicitly order columns to match the required format
     const csvContent = Papa.unparse(dataToSave, {
-      columns: ["Date", "Time", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"]
+      columns: ["DateTime", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"]
     });
     
     if (state.fileHandle && window.showSaveFilePicker) {
       const writable = await state.fileHandle.createWritable();
       await writable.write(csvContent);
       await writable.close();
-      alert("Changes saved successfully!");
+      showStatusMessage("Changes saved successfully!");
     } else {
       // Fallback download for iOS / Unsupported browsers
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -243,13 +242,14 @@ export async function saveFile() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      alert("Changes downloaded successfully!");
+      showStatusMessage("File downloaded!");
     }
     
     // Commit changes to original state
     state.originalTransactions = JSON.parse(JSON.stringify(state.transactions));
     
     clearUnsavedChanges();
+    renderApp(); // Ensure UI is refreshed and remains in app view
   } catch (error) {
     console.error("Failed to save file", error);
     alert("Failed to save file. Ensure you have granted the necessary permissions.");

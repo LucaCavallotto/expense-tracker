@@ -85,7 +85,7 @@ The app uses a **Premium Green** accent theme with a focus on rich aesthetics.
 
 ## CSV Data Schema
 The program expects a specific column order for CSV compatibility:
-`Date, Time, Amount, Description, Category, Subcategory, Tags, Notes`
+`DateTime, Amount, Description, Category, Subcategory, Tags, Notes`
 
 ---
 

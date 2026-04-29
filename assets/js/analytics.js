@@ -38,7 +38,7 @@ export function renderAnalytics() {
     const currentMonth = now.getMonth();
 
     transactions = state.transactions.filter(t => {
-      const tDate = new Date(t.Date);
+      const tDate = new Date(t.DateTime);
       if (isNaN(tDate)) return false;
 
       if (period === 'current_month') {
@@ -249,8 +249,8 @@ function populateAvailableMonths() {
   // Find unique months
   const months = new Set();
   state.transactions.forEach(t => {
-    if (t.Date) {
-      const date = new Date(t.Date);
+    if (t.DateTime) {
+      const date = new Date(t.DateTime);
       if (!isNaN(date)) {
         const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         months.add(key);

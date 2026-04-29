@@ -32,17 +32,38 @@ function getCategoryMeta(category) {
 
 let expenseModalInstance = null;
 
+/**
+ * Returns the current system timezone offset in ±HH:mm format.
+ */
+function getSystemTimezoneOffset() {
+  const offset = -new Date().getTimezoneOffset();
+  const absOffset = Math.abs(offset);
+  const h = String(Math.floor(absOffset / 60)).padStart(2, '0');
+  const m = String(absOffset % 60).padStart(2, '0');
+  return (offset >= 0 ? '+' : '-') + h + ':' + m;
+}
+
+/**
+ * Parses a string into a full ISO 8601 DateTime string with timezone.
+ */
 function parseInlineDate(dateStr) {
-  let dateVal = '';
-  let timeVal = '';
-  const isoMatch = dateStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
-  if (isoMatch) {
-    dateVal = isoMatch[1];
-    timeVal = isoMatch[2];
-  } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    dateVal = dateStr;
+  if (!dateStr) return '';
+  
+  // Check if it's already a full ISO string (with T and optional timezone)
+  if (dateStr.includes('T')) {
+    // If it has T but no timezone offset/Z, append system timezone
+    if (!dateStr.match(/[Z+-]\d{2}:?\d{2}$/)) {
+      return dateStr + getSystemTimezoneOffset();
+    }
+    return dateStr;
   }
-  return { dateVal, timeVal };
+  
+  // If it's just a date YYYY-MM-DD
+  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return `${dateStr}T00:00:00${getSystemTimezoneOffset()}`;
+  }
+  
+  return '';
 }
 
 /**
@@ -84,10 +105,15 @@ export function setupUIEvents() {
       const parts = firstLine.split(',').map(p => p.trim());
       
       if (parts.length > 0 && parts[0]) {
-        const { dateVal, timeVal } = parseInlineDate(parts[0]);
-        if (dateVal) document.getElementById('inputDate').value = dateVal;
-        const timeInput = document.getElementById('inputTime');
-        if (timeInput && timeVal) timeInput.value = timeVal;
+        const isoStr = parseInlineDate(parts[0]);
+        if (isoStr) {
+          const [d, tPart] = isoStr.split('T');
+          document.getElementById('inputDate').value = d;
+          const timeInput = document.getElementById('inputTime');
+          if (timeInput && tPart) {
+            timeInput.value = tPart.substring(0, 8); // Take HH:mm:ss
+          }
+        }
       }
       
       if (parts.length > 1 && parts[1]) {
@@ -307,7 +333,7 @@ function renderHomeSection() {
       
       tr.innerHTML = `
         <!-- Desktop Layout -->
-        <td class="d-none d-md-table-cell"><small class="text-muted">${formatDate(t.Date, t.Time)}</small></td>
+        <td class="d-none d-md-table-cell"><small class="text-muted">${formatDate(t.DateTime)}</small></td>
         <td class="d-none d-md-table-cell">${t.Description}</td>
         <td class="text-end d-none d-md-table-cell ${amountClass}">${amountStr}</td>
         
@@ -326,7 +352,7 @@ function renderHomeSection() {
             </div>
             <div class="text-end ms-2" style="flex-shrink: 0;">
               <div class="${amountClass} text-nowrap" style="font-size: 1.1rem;">${amountStr}</div>
-              <div class="text-muted small mt-1 text-nowrap">${formatDate(t.Date)}</div>
+              <div class="text-muted small mt-1 text-nowrap">${formatDate(t.DateTime)}</div>
             </div>
           </div>
         </td>
@@ -345,14 +371,21 @@ function renderHomeSection() {
   }
 }
 
-function formatDate(dateStr, timeStr) {
-  if (!dateStr) return '';
-  const [year, month, day] = dateStr.split('-');
-  const formattedDate = `${day}/${month}/${year}`;
-  if (timeStr) {
-    return `${formattedDate} ${timeStr}`;
-  }
-  return formattedDate;
+/**
+ * Formats an ISO 8601 string into a human-readable format.
+ */
+function formatDate(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  if (isNaN(date)) return isoString;
+  
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
 /**
@@ -386,9 +419,9 @@ export function renderTransactions() {
     if (col === 'Amount') {
       return (a.Amount - b.Amount) * dir;
     } else if (col === 'Date') {
-      const dateA = new Date(a.Date).getTime() || 0;
-      const dateB = new Date(b.Date).getTime() || 0;
-      return (dateA - dateB) * dir;
+      const dateA = a.DateTime || '';
+      const dateB = b.DateTime || '';
+      return dateA.localeCompare(dateB) * dir;
     } else {
       return (a[col] || '').localeCompare(b[col] || '') * dir;
     }
@@ -404,9 +437,9 @@ export function renderTransactions() {
   // Build and insert DOM rows
   let txCounter = 0;
   sorted.forEach((t) => {
-    if (isDateSorted && t.Date) {
-      const year = t.Date.substring(0, 4);
-      const month = t.Date.substring(5, 7);
+    if (isDateSorted && t.DateTime) {
+      const year = t.DateTime.substring(0, 4);
+      const month = t.DateTime.substring(5, 7);
 
       if (year !== lastYear) {
         const yearTr = document.createElement('tr');
@@ -451,7 +484,7 @@ export function renderTransactions() {
     
     tr.innerHTML = `
       <!-- Desktop Layout -->
-      <td class="d-none d-md-table-cell">${formatDate(t.Date, t.Time)}</td>
+      <td class="d-none d-md-table-cell">${formatDate(t.DateTime)}</td>
       <td class="d-none d-md-table-cell ${amountClass}">${amountStr}</td>
       <td class="d-none d-md-table-cell">${t.Description}</td>
       <td class="d-none d-lg-table-cell"><span class="badge bg-secondary">${t.Category || 'Uncategorized'}</span></td>
@@ -478,7 +511,7 @@ export function renderTransactions() {
           </div>
           <div class="text-end ms-2" style="flex-shrink: 0;">
             <div class="${amountClass} text-nowrap" style="font-size: 1.1rem;">${amountStr}</div>
-            <div class="text-muted small mt-1 text-nowrap">${formatDate(t.Date)}</div>
+            <div class="text-muted small mt-1 text-nowrap">${formatDate(t.DateTime)}</div>
           </div>
         </div>
       </td>
@@ -520,8 +553,15 @@ function editTransaction(id) {
   if (!t) return;
   
   document.getElementById('editTransactionId').value = t.id;
-  document.getElementById('inputDate').value = t.Date;
-  document.getElementById('inputTime').value = t.Time || '';
+  
+  if (t.DateTime) {
+    const [d, tPart] = t.DateTime.split('T');
+    document.getElementById('inputDate').value = d;
+    if (tPart) {
+      document.getElementById('inputTime').value = tPart.substring(0, 8);
+    }
+  }
+  
   document.getElementById('inputAmount').value = t.Amount;
   document.getElementById('inputDescription').value = t.Description;
   
@@ -574,8 +614,8 @@ function handleTransactionSubmit(e) {
       const parts = line.split(',').map(p => p.trim());
       if (parts.length < 2) return;
       
-      const { dateVal, timeVal } = parseInlineDate(parts[0]);
-      if (!dateVal) return;
+      const isoStr = parseInlineDate(parts[0]);
+      if (!isoStr) return;
       
       let amountStr = parts[1].replace(',', '.').replace(/[^\d\.\+\-]/g, '');
       const amountFloat = parseFloat(amountStr);
@@ -585,8 +625,7 @@ function handleTransactionSubmit(e) {
       
       state.transactions.push({
         id: crypto.randomUUID(),
-        Date: dateVal,
-        Time: timeVal,
+        DateTime: isoStr,
         Amount: amountFloat,
         Description: desc,
         Category: Category,
@@ -598,7 +637,10 @@ function handleTransactionSubmit(e) {
   } else {
     // Standard Single Add/Edit
     const DateVal = document.getElementById('inputDate').value;
-    const TimeVal = document.getElementById('inputTime') ? document.getElementById('inputTime').value : '';
+    const TimeVal = document.getElementById('inputTime') ? document.getElementById('inputTime').value : '00:00:00';
+    
+    const isoDateTime = `${DateVal}T${TimeVal.length === 5 ? TimeVal + ':00' : TimeVal}${getSystemTimezoneOffset()}`;
+    
     const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
     const Description = document.getElementById('inputDescription').value;
     
@@ -610,14 +652,13 @@ function handleTransactionSubmit(e) {
       // Perform Edit
       const index = state.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
-        state.transactions[index] = { id, Date: DateVal, Time: TimeVal, Amount, Description, Category, Subcategory, Tags: finalTags, Notes };
+        state.transactions[index] = { id, DateTime: isoDateTime, Amount, Description, Category, Subcategory, Tags: finalTags, Notes };
       }
     } else {
       // Perform Add
       state.transactions.push({
         id: crypto.randomUUID(),
-        Date: DateVal,
-        Time: TimeVal,
+        DateTime: isoDateTime,
         Amount,
         Description,
         Category,
@@ -726,4 +767,21 @@ function applyTagSuggestion(suggestion) {
   input.focus();
   
   document.getElementById('tagsSuggestionBox').classList.add('d-none');
+}
+
+/**
+ * Shows a temporary status message in the navbar.
+ */
+export function showStatusMessage(message, type = 'success') {
+  const statusEl = document.getElementById('currentFileName');
+  const originalText = state.fileName;
+  const originalClass = statusEl.className;
+  
+  statusEl.textContent = message;
+  statusEl.className = `fw-bold text-${type}`;
+  
+  setTimeout(() => {
+    statusEl.textContent = originalText;
+    statusEl.className = originalClass;
+  }, 3000);
 }
