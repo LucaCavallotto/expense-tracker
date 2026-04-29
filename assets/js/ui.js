@@ -146,21 +146,7 @@ export function setupUIEvents() {
     inputCategory.addEventListener('change', handleCategoryChange);
   }
 
-  // Home section links
-  const linkToTransactions = document.getElementById('linkToTransactions');
-  if (linkToTransactions) {
-    linkToTransactions.addEventListener('click', () => {
-      const tab = new bootstrap.Tab(document.getElementById('list-tab'));
-      tab.show();
-    });
-  }
-  const linkToAnalytics = document.getElementById('linkToAnalytics');
-  if (linkToAnalytics) {
-    linkToAnalytics.addEventListener('click', () => {
-      const tab = new bootstrap.Tab(document.getElementById('analytics-tab'));
-      tab.show();
-    });
-  }
+
   
   // Attach sorting events to sortable headers
   document.querySelectorAll('th.sortable').forEach(th => {
@@ -227,7 +213,6 @@ export function renderApp() {
     populateCategoriesDropdown();
     updateAllTags();
     renderTransactions();
-    renderHomeSection();
   } else {
     // No file is open
     landingView.classList.remove('d-none');
@@ -294,82 +279,7 @@ function resetForm() {
   if (btnDelete) btnDelete.classList.add('d-none');
 }
 
-function renderHomeSection() {
-  const homeMetricDelta = document.getElementById('homeMetricDelta');
-  const homeRecentTbody = document.getElementById('homeRecentTbody');
-  
-  // Calculate Net Delta
-  let totalIncome = 0;
-  let totalExpenses = 0;
-  state.transactions.forEach(t => {
-    if (t.Amount >= 0) totalIncome += t.Amount;
-    else totalExpenses += Math.abs(t.Amount);
-  });
-  const netDelta = totalIncome - totalExpenses;
-  
-  // Update Delta Display
-  if (homeMetricDelta) {
-    homeMetricDelta.textContent = `${netDelta >= 0 ? '+' : '-'}€${Math.abs(netDelta).toFixed(2)}`;
-    homeMetricDelta.className = netDelta >= 0 ? 'fw-bold my-3 text-success' : 'fw-bold my-3 text-danger';
-  }
-  
-  // Render first 5 transactions
-  if (homeRecentTbody) {
-    homeRecentTbody.innerHTML = '';
-    const recent = [...state.transactions]
-      .sort((a, b) => new Date(b.Date) - new Date(a.Date))
-      .slice(0, 5);
-    
-    recent.forEach((t, index) => {
-      const tr = document.createElement('tr');
-      const isIncome = t.Amount >= 0;
-      const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
-      const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
-      const meta = getCategoryMeta(t.Category);
-      
-      tr.className = 'mobile-row-click';
-      if (index % 2 === 1) tr.classList.add('bg-body-tertiary');
-      tr.setAttribute('data-id', t.id);
-      
-      tr.innerHTML = `
-        <!-- Desktop Layout -->
-        <td class="d-none d-md-table-cell"><small class="text-muted">${formatDate(t.DateTime)}</small></td>
-        <td class="d-none d-md-table-cell">${t.Description}</td>
-        <td class="text-end d-none d-md-table-cell ${amountClass}">${amountStr}</td>
-        
-        <!-- Mobile Layout -->
-        <td class="d-md-none mobile-visible w-100 p-0 border-0">
-          <div class="d-flex align-items-center w-100 p-2">
-            <div style="width: 44px; flex-shrink: 0;">
-              <div class="category-icon shadow-sm ${meta.color}">
-                <i class="bi ${meta.icon}"></i>
-              </div>
-            </div>
-            <div class="flex-grow-1 ms-3 overflow-hidden" style="min-width: 0;">
-              <div class="fw-bold text-truncate" style="font-size: 1.05rem;">${t.Description}</div>
-              <div class="text-muted small text-truncate">${t.Category}${t.Subcategory ? ' / ' + t.Subcategory : ''}</div>
-              ${t.Notes ? `<div class="text-muted small text-truncate">${t.Notes}</div>` : ''}
-            </div>
-            <div class="text-end ms-2" style="flex-shrink: 0;">
-              <div class="${amountClass} text-nowrap" style="font-size: 1.1rem;">${amountStr}</div>
-              <div class="text-muted small mt-1 text-nowrap">${formatDate(t.DateTime)}</div>
-            </div>
-          </div>
-        </td>
-      `;
-      homeRecentTbody.appendChild(tr);
-    });
-    
-    // Attach click listeners
-    homeRecentTbody.querySelectorAll('.mobile-row-click').forEach(row => {
-      row.addEventListener('click', () => editTransaction(row.getAttribute('data-id')));
-    });
-    
-    if (recent.length === 0) {
-      homeRecentTbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3 mobile-visible">No transactions yet</td></tr>';
-    }
-  }
-}
+
 
 /**
  * Formats an ISO 8601 string into a human-readable format.
