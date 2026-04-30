@@ -10,7 +10,7 @@
   "Food & Dining": [
     "Groceries",
     "Restaurant",
-    "Delivery",
+    "Delivery & Takeaway",
     "Canteen"
   ],
   "Bar": [
@@ -19,7 +19,9 @@
     "Aperitifs",
     "Drinks",
     "Coffee",
-    "Soda"
+    "Soda",
+    "Gelato",
+    "Mixed orders"
   ],
   "Mixed": [
     "Expenses"
