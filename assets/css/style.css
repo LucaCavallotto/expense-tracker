@@ -45,6 +45,13 @@ footer {
   color: #fff !important;
 }
 
+.btn-primary:disabled, .btn-outline-primary:disabled {
+  background-color: transparent !important;
+  border-color: var(--primary-accent) !important;
+  color: var(--primary-accent) !important;
+  opacity: 0.5;
+}
+
 .text-primary {
   color: var(--primary-accent) !important;
 }

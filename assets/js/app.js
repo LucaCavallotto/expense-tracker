@@ -16,16 +16,24 @@ export function markUnsavedChanges() {
   state.hasUnsavedChanges = true;
   const warning = document.getElementById('unsavedWarning');
   if (warning) warning.classList.remove('d-none');
+  
   const btnUndo = document.getElementById('btnUndoChanges');
   if (btnUndo) btnUndo.disabled = false;
+  
+  const btnSave = document.getElementById('btnSaveChanges');
+  if (btnSave) btnSave.disabled = false;
 }
 
 export function clearUnsavedChanges() {
   state.hasUnsavedChanges = false;
   const warning = document.getElementById('unsavedWarning');
   if (warning) warning.classList.add('d-none');
+  
   const btnUndo = document.getElementById('btnUndoChanges');
   if (btnUndo) btnUndo.disabled = true;
+  
+  const btnSave = document.getElementById('btnSaveChanges');
+  if (btnSave) btnSave.disabled = true;
 }
 
 import { loadCategories, setupFileSystemEvents } from './fileSystem.js';
