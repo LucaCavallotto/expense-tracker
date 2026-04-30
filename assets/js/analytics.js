@@ -464,7 +464,7 @@ function renderDetailedCategoryBreakdown(transactions, periodLabel) {
           <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-start mb-1">
               <div>
-                <span class="fw-bold text-dark d-block" style="font-size: 1.1rem;">${catName}</span>
+                <span class="fw-bold d-block" style="font-size: 1.1rem;">${catName}</span>
                 <span class="text-muted small">Total for ${periodLabel}</span>
               </div>
               <div class="text-end">
