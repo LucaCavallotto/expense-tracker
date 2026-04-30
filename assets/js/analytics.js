@@ -2,6 +2,7 @@ import { state } from './app.js';
 
 let pieChartInstance = null;
 let barChartInstance = null;
+let detailedShowAll = false;
 
 let periodListenerAttached = false;
 
@@ -22,6 +23,32 @@ export function renderAnalytics() {
     if (monthSelect) {
       monthSelect.addEventListener('change', renderAnalytics);
     }
+    
+    // Attach Show More listener once
+    const btnShowMore = document.getElementById('btnShowMoreCategories');
+    if (btnShowMore) {
+      btnShowMore.addEventListener('click', () => {
+        detailedShowAll = !detailedShowAll;
+        renderAnalytics();
+      });
+    }
+
+    // Attach Delegation for Category Toggles
+    const detailedList = document.getElementById('detailedCategoryList');
+    if (detailedList) {
+      detailedList.addEventListener('click', (e) => {
+        const item = e.target.closest('.category-item');
+        if (item) {
+          const subList = item.querySelector('.subcategory-list');
+          if (subList) {
+            const isExpanded = subList.classList.toggle('show');
+            item.classList.toggle('expanded', isExpanded);
+          }
+        }
+      });
+    }
+
+    periodListenerAttached = true;
   }
 
   const periodSelect = document.getElementById('analyticsTimePeriod');
@@ -111,6 +138,7 @@ export function renderAnalytics() {
 
   updatePieChart(categoryExpenses);
   updateBarChart(totalIncome, totalExpenses, periodLabel);
+  renderDetailedCategoryBreakdown(transactions, periodLabel);
 }
 
 /**
@@ -279,4 +307,106 @@ function populateAvailableMonths() {
   if (currentSelection && sortedMonths.includes(currentSelection)) {
     monthSelect.value = currentSelection;
   }
+}
+
+/**
+ * Renders the hierarchical list of categories and subcategories.
+ */
+function renderDetailedCategoryBreakdown(transactions, periodLabel) {
+  const container = document.getElementById('detailedCategoryList');
+  const footer = document.getElementById('detailedBreakdownFooter');
+  const periodBadge = document.getElementById('detailedBreakdownPeriod');
+  
+  if (!container) return;
+  
+  if (periodBadge) periodBadge.textContent = periodLabel;
+
+  // Aggregate data
+  const data = {}; // { Category: { total: 0, subcategories: { Sub: 0 } } }
+  let grandTotal = 0;
+
+  transactions.forEach(t => {
+    if (t.Amount < 0) {
+      const absAmt = Math.abs(t.Amount);
+      const cat = t.Category || 'Uncategorized';
+      const sub = t.Subcategory || '(No Subcategory)';
+      
+      grandTotal += absAmt;
+      
+      if (!data[cat]) {
+        data[cat] = { total: 0, subcategories: {} };
+      }
+      data[cat].total += absAmt;
+      
+      if (!data[cat].subcategories[sub]) {
+        data[cat].subcategories[sub] = 0;
+      }
+      data[cat].subcategories[sub] += absAmt;
+    }
+  });
+
+  // Sort categories by total descending
+  const sortedCategories = Object.entries(data)
+    .sort(([, a], [, b]) => b.total - a.total);
+
+  const totalCount = sortedCategories.length;
+  const displayCount = detailedShowAll ? totalCount : 5;
+  const visibleCategories = sortedCategories.slice(0, displayCount);
+
+  // Update Footer (Show More button)
+  if (footer) {
+    footer.classList.toggle('d-none', totalCount <= 5);
+    const btn = footer.querySelector('button');
+    if (btn) {
+      btn.innerHTML = detailedShowAll 
+        ? 'Show Less <i class="bi bi-chevron-up"></i>' 
+        : `Show More (${totalCount - 5} others) <i class="bi bi-chevron-down"></i>`;
+    }
+  }
+
+  if (totalCount === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-muted">No expenses recorded for this period.</div>';
+    return;
+  }
+
+  // Render
+  container.innerHTML = visibleCategories.map(([catName, catData]) => {
+    const percentage = grandTotal > 0 ? (catData.total / grandTotal * 100).toFixed(1) : 0;
+    
+    // Sort subcategories by amount descending
+    const sortedSubcats = Object.entries(catData.subcategories)
+      .sort(([, a], [, b]) => b - a);
+
+    const subcatsHtml = sortedSubcats.map(([subName, subAmt]) => `
+      <div class="subcategory-item d-flex justify-content-between align-items-center">
+        <span class="text-muted">${subName}</span>
+        <span class="fw-semibold">€${subAmt.toFixed(2)}</span>
+      </div>
+    `).join('');
+
+    return `
+      <div class="category-item list-group-item p-0 border-bottom">
+        <div class="category-header d-flex align-items-center">
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold text-dark">${catName}</span>
+              <div class="text-end">
+                <span class="category-amount-badge text-primary">€${catData.total.toFixed(2)}</span>
+                <div class="text-muted small">${percentage}%</div>
+              </div>
+            </div>
+            <div class="category-progress">
+              <div class="category-progress-bar" style="width: ${percentage}%"></div>
+            </div>
+          </div>
+          <div class="ms-3">
+            <i class="bi bi-chevron-down chevron-icon text-muted"></i>
+          </div>
+        </div>
+        <div class="subcategory-list">
+          ${subcatsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
 }

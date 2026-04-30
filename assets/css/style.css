@@ -198,3 +198,74 @@ footer {
 #tagsSuggestionBox .list-group-item:hover {
   background-color: var(--bs-secondary-bg);
 }
+
+/* Detailed Category Breakdown Styles */
+.category-item {
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+.category-item:hover {
+  background-color: rgba(27, 122, 56, 0.03);
+}
+
+[data-bs-theme="dark"] .category-item:hover {
+  background-color: rgba(40, 167, 69, 0.05);
+}
+
+.category-header {
+  padding: 1rem 1.25rem;
+}
+
+.subcategory-list {
+  background-color: var(--bs-tertiary-bg);
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease-out;
+}
+
+.subcategory-list.show {
+  max-height: 1000px; /* Large enough to fit content */
+  transition: max-height 0.5s ease-in;
+}
+
+.subcategory-item {
+  padding: 0.75rem 1.25rem 0.75rem 3.5rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+[data-bs-theme="dark"] .subcategory-item {
+  border-bottom-color: rgba(255,255,255,0.03);
+}
+
+.subcategory-item:last-child {
+  border-bottom: none;
+}
+
+.category-progress {
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--bs-secondary-bg);
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.category-progress-bar {
+  height: 100%;
+  background-color: var(--primary-accent);
+  transition: width 0.6s ease;
+}
+
+.chevron-icon {
+  transition: transform 0.3s ease;
+}
+
+.category-item.expanded .chevron-icon {
+  transform: rotate(180deg);
+}
+
+.category-amount-badge {
+  font-weight: 700;
+  font-size: 1rem;
+}
