@@ -1,7 +1,7 @@
 import { state } from './app.js';
 
 let pieChartInstance = null;
-let barChartInstance = null;
+let lineChartInstance = null;
 let detailedShowAll = false;
 
 let periodListenerAttached = false;
@@ -137,7 +137,8 @@ export function renderAnalytics() {
   }
 
   updatePieChart(categoryExpenses);
-  updateBarChart(totalIncome, totalExpenses, periodLabel);
+  updateLineChart(state.transactions, periodLabel);
+  updateComparisonMetrics(state.transactions);
   renderDetailedCategoryBreakdown(transactions, periodLabel);
 }
 
@@ -200,56 +201,127 @@ function updatePieChart(categoryExpenses) {
 }
 
 /**
- * Creates or updates the overview bar chart displaying Total Income vs Total Expenses.
+ * Creates or updates the cash flow trend line chart.
  */
-function updateBarChart(totalIncome, totalExpenses, periodLabel) {
-  const ctx = document.getElementById('incomeVsExpenseChart').getContext('2d');
+function updateLineChart(transactions, periodLabel) {
+  const ctx = document.getElementById('cashFlowLineChart').getContext('2d');
   
-  if (barChartInstance) {
-    barChartInstance.destroy();
+  if (lineChartInstance) {
+    lineChartInstance.destroy();
   }
+
+  // Group data by month
+  const months = {};
+  const now = new Date();
   
-  // Determine standard Bootstrap CSS variables or fallback strings for charts
-  const greenAcc = '#28a745';
-  const redAcc = '#dc3545';
-  
-  barChartInstance = new Chart(ctx, {
-    type: 'bar',
+  // Initialize last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    months[key] = { income: 0, expenses: 0, label: d.toLocaleString('default', { month: 'short' }).toUpperCase() };
+  }
+
+  transactions.forEach(t => {
+    const d = new Date(t.DateTime);
+    if (isNaN(d)) return;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (months[key]) {
+      if (t.Amount >= 0) months[key].income += t.Amount;
+      else months[key].expenses += Math.abs(t.Amount);
+    }
+  });
+
+  const sortedKeys = Object.keys(months).sort();
+  const labels = sortedKeys.map(k => months[k].label);
+  const incomeData = sortedKeys.map(k => months[k].income);
+  const expenseData = sortedKeys.map(k => months[k].expenses);
+
+  lineChartInstance = new Chart(ctx, {
+    type: 'line',
     data: {
-      labels: [periodLabel],
+      labels: labels,
       datasets: [
         {
           label: 'Total Income',
-          data: [totalIncome],
-          backgroundColor: greenAcc,
-          borderRadius: 4
+          data: incomeData,
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40, 167, 69, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#28a745'
         },
         {
           label: 'Total Expenses',
-          data: [totalExpenses],
-          backgroundColor: redAcc,
-          borderRadius: 4
+          data: expenseData,
+          borderColor: '#dc3545',
+          backgroundColor: 'rgba(220, 53, 69, 0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#dc3545'
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return ` ${context.dataset.label}: €${context.raw.toFixed(2)}`;
+            }
+          }
+        }
+      },
       scales: {
         y: {
           beginAtZero: true,
-          grid: {
-            color: 'rgba(0,0,0,0.05)'
-          }
+          grid: { color: 'rgba(0,0,0,0.05)' }
         },
         x: {
-          grid: {
-            display: false
-          }
+          grid: { display: false }
         }
       }
     }
   });
+}
+
+/**
+ * Calculates and updates the monthly comparison metrics.
+ */
+function updateComparisonMetrics(transactions) {
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+
+  let currentTotal = 0;
+  let prevTotal = 0;
+
+  transactions.forEach(t => {
+    if (t.Amount < 0) {
+      const d = new Date(t.DateTime);
+      if (isNaN(d)) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (key === currentMonthKey) currentTotal += Math.abs(t.Amount);
+      else if (key === prevMonthKey) prevTotal += Math.abs(t.Amount);
+    }
+  });
+
+  const diff = currentTotal - prevTotal;
+  const percent = prevTotal > 0 ? (diff / prevTotal * 100) : (currentTotal > 0 ? 100 : 0);
+  const percentStr = `${diff >= 0 ? '+' : ''}${percent.toFixed(1)}%`;
+
+  document.getElementById('metricCurrentMonth').innerHTML = `€${currentTotal.toFixed(2)} <span id="metricComparisonPercent" class="small ${diff > 0 ? 'text-danger' : 'text-success'}">(${percentStr})</span>`;
+  document.getElementById('metricPrevMonth').textContent = `€${prevTotal.toFixed(2)}`;
 }
 
 /**
@@ -316,10 +388,12 @@ function renderDetailedCategoryBreakdown(transactions, periodLabel) {
   const container = document.getElementById('detailedCategoryList');
   const footer = document.getElementById('detailedBreakdownFooter');
   const periodBadge = document.getElementById('detailedBreakdownPeriod');
+  const subtitle = document.getElementById('detailedBreakdownSubtitle');
   
   if (!container) return;
   
   if (periodBadge) periodBadge.textContent = periodLabel;
+  if (subtitle) subtitle.textContent = `(${periodLabel})`;
 
   // Aggregate data
   const data = {}; // { Category: { total: 0, subcategories: { Sub: 0 } } }
@@ -388,10 +462,13 @@ function renderDetailedCategoryBreakdown(transactions, periodLabel) {
       <div class="category-item list-group-item p-0 border-bottom">
         <div class="category-header d-flex align-items-center">
           <div class="flex-grow-1">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="fw-bold text-dark">${catName}</span>
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <div>
+                <span class="fw-bold text-dark d-block" style="font-size: 1.1rem;">${catName}</span>
+                <span class="text-muted small">Total for ${periodLabel}</span>
+              </div>
               <div class="text-end">
-                <span class="category-amount-badge text-primary">€${catData.total.toFixed(2)}</span>
+                <span class="category-amount-badge text-success" style="font-size: 1.1rem; font-weight: 700;">€${catData.total.toFixed(2)}</span>
                 <div class="text-muted small">${percentage}%</div>
               </div>
             </div>

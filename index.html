@@ -199,7 +199,7 @@
                 <option value="specific_month">Specific Month...</option>
                 <option value="last_3_months">Last 3 Months</option>
                 <option value="last_6_months">Last 6 Months</option>
-                <option value="last_12_months">Last 12 Months</option>
+                <option value="last_12_months" selected>Last 12 Months</option>
               </select>
               <div id="monthSelectContainer" class="d-none">
                 <select id="analyticsSpecificMonth" class="form-select shadow-sm" style="max-width: 180px;">
@@ -209,27 +209,44 @@
             </div>
           </div>
           <div class="row mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3 col-sm-6">
               <div class="card text-center shadow-sm h-100 border-success">
                 <div class="card-body">
-                  <h5 class="card-title text-success">Total Income</h5>
-                  <h2 class="card-text fw-bold" id="metricIncome">$0.00</h2>
+                  <h6 class="card-subtitle mb-2 text-success fw-bold text-uppercase small">Total Income</h6>
+                  <h2 class="card-text fw-bold" id="metricIncome">€0.00</h2>
                 </div>
               </div>
             </div>
-            <div class="col-md-4 mt-3 mt-md-0">
+            <div class="col-md-3 col-sm-6 mt-3 mt-sm-0">
               <div class="card text-center shadow-sm h-100 border-danger">
                 <div class="card-body">
-                  <h5 class="card-title text-danger">Total Expenses</h5>
-                  <h2 class="card-text fw-bold" id="metricExpenses">$0.00</h2>
+                  <h6 class="card-subtitle mb-2 text-danger fw-bold text-uppercase small">Total Expenses</h6>
+                  <h2 class="card-text fw-bold" id="metricExpenses">€0.00</h2>
                 </div>
               </div>
             </div>
-            <div class="col-md-4 mt-3 mt-md-0">
+            <div class="col-md-3 col-sm-6 mt-3 mt-md-0">
               <div class="card text-center shadow-sm h-100 border-primary">
                 <div class="card-body">
-                  <h5 class="card-title text-primary">Net Delta</h5>
-                  <h2 class="card-text fw-bold" id="metricDelta">$0.00</h2>
+                  <h6 class="card-subtitle mb-2 text-primary fw-bold text-uppercase small">Net Delta</h6>
+                  <h2 class="card-text fw-bold" id="metricDelta">€0.00</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mt-3 mt-md-0">
+              <div class="card shadow-sm h-100 border-secondary">
+                <div class="card-body py-2 d-flex flex-column justify-content-center">
+                  <h6 class="card-subtitle mb-2 text-secondary fw-bold text-uppercase small text-center">Monthly Spend Comparison</h6>
+                  <div class="d-flex flex-column gap-1">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="small text-muted">Current Month:</span>
+                      <span class="fw-bold" id="metricCurrentMonth">€0.00 <span id="metricComparisonPercent" class="small text-danger">(+0.0%)</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="small text-muted">Previous Month:</span>
+                      <span class="fw-bold" id="metricPrevMonth">€0.00</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -249,10 +266,10 @@
             <div class="col-lg-6 mb-4">
               <div class="card shadow-sm h-100">
                 <div class="card-header bg-transparent border-bottom-0">
-                  <h5 class="card-title mb-0">Income vs Expenses Overview</h5>
+                  <h5 class="card-title mb-0">Monthly Cash Flow Trend</h5>
                 </div>
                 <div class="card-body">
-                  <canvas id="incomeVsExpenseChart"></canvas>
+                  <canvas id="cashFlowLineChart"></canvas>
                 </div>
               </div>
             </div>
@@ -262,7 +279,7 @@
             <div class="col-12 mb-4">
               <div class="card shadow-sm">
                 <div class="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center">
-                  <h5 class="card-title mb-0">Detailed Spending Breakdown</h5>
+                  <h5 class="card-title mb-0">Detailed Spending Breakdown <small class="text-muted fw-normal" id="detailedBreakdownSubtitle">(Last 12 Months)</small></h5>
                   <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="detailedBreakdownPeriod">Overall</span>
                 </div>
                 <div class="card-body p-0">
