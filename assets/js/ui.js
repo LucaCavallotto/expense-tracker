@@ -350,7 +350,12 @@ export function renderTransactions() {
   let filteredTransactions = state.transactions;
   if (state.searchQuery) {
     filteredTransactions = state.transactions.filter(t => 
-      t.Description.toLowerCase().includes(state.searchQuery)
+      t.Description.toLowerCase().includes(state.searchQuery) ||
+      t.Amount.toString().includes(state.searchQuery) ||
+      (t.Category || '').toLowerCase().includes(state.searchQuery) ||
+      (t.Subcategory || '').toLowerCase().includes(state.searchQuery) ||
+      (t.Tags || '').toLowerCase().includes(state.searchQuery) ||
+      (t.Notes || '').toLowerCase().includes(state.searchQuery)
     );
   }
 
