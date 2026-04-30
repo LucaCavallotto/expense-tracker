@@ -1,44 +1,102 @@
 {
-  "Income": [
-    "Salary",
-    "Freelance",
-    "Family",
-    "Gift",
-    "Sales",
-    "Reimbursement"
+  "Bar": [
+    "Aperitifs",
+    "Beer",
+    "Breakfast",
+    "Coffee",
+    "Drinks",
+    "Gelato",
+    "Mixed orders",
+    "Snacks",
+    "Soda"
+  ],
+  "Bills": [
+    "Phone & Internet",
+    "Subscription"
+  ],
+  "Entertainment": [
+    "Books/Music/Subscriptions",
+    "Clubs",
+    "Films/Concerts/Museums/Events",
+    "Hobbies",
+    "Other",
+    "Parties"
+  ],
+  "Fines": [
+    "Fine Expenses"
   ],
   "Food & Dining": [
-    "Groceries",
-    "Restaurant",
+    "Canteen",
     "Delivery & Takeaway",
-    "Canteen"
+    "Groceries",
+    "Restaurant"
   ],
-  "Bar": [
-    "Breakfast",
-    "Snacks",
-    "Aperitifs",
-    "Drinks",
-    "Coffee",
-    "Soda",
-    "Gelato",
-    "Mixed orders"
+  "Health & Care": [
+    "Beauty Care",
+    "Hair Care",
+    "Medical Expenses",
+    "Medicines",
+    "Treatments"
+  ],
+  "Income": [
+    "Family",
+    "Freelance",
+    "Gift",
+    "Reimbursement",
+    "Salary",
+    "Sales"
+  ],
+  "Insurance": [
+    "Insurance Expenses"
+  ],
+  "Investments": [
+    "Interest",
+    "Other",
+    "Security"
   ],
   "Mixed": [
     "Expenses"
   ],
+  "Other": [
+    "Charity",
+    "Debts & Credits",
+    "Missing",
+    "One-off",
+    "Uncategorized"
+  ],
   "Shopping": [
     "Clothes & Accessories",
-    "Shoes",
     "Electronics & Gadgets",
-    "Software",
+    "Gifts to Buy",
     "Home",
-    "Gifts to Buy"
+    "Shoes",
+    "Software"
+  ],
+  "Sports": [
+    "Gym & Fitness",
+    "Karting",
+    "Other Sports",
+    "Running",
+    "Swimming",
+    "Tennis"
+  ],
+  "Taxes": [
+    "Tax Expenses"
+  ],
+  "Transportation": [
+    "Airline",
+    "Buses",
+    "Public Transport",
+    "Rentals",
+    "Ships",
+    "Taxi",
+    "Trains"
   ],
   "Travel": [
-    "Transport",
     "Accommodation",
     "Fees",
-    "Tours"
+    "Tours",
+    "Transport"
   ],
   "Vehicle": [
     "Car Payment & Lease",
@@ -47,51 +105,5 @@
     "Maintenance",
     "Parking",
     "Toll Booths"
-  ],
-  "Entertainment": [
-    "Books/Music/Subscriptions",
-    "Films/Concerts/Museums/Events",
-    "Clubs",
-    "Parties",
-    "Hobbies",
-    "Other"
-  ],
-  "Health & Care": [
-    "Medical Expenses",
-    "Medicines",
-    "Treatments",
-    "Hair Care",
-    "Beauty Care"
-  ],
-  "Sports": [
-    "Running",
-    "Tennis",
-    "Swimming",
-    "Gym & Fitness",
-    "Other Sports"
-  ],
-  "Bills": [
-    "Phone & Internet",
-    "Subscription"
-  ],
-  "Taxes": [
-    "Tax Expenses"
-  ],
-  "Insurance": [
-    "Insurance Expenses"
-  ],
-  "Fines": [
-    "Fine Expenses"
-  ],
-  "Investments": [
-    "Security",
-    "Interest",
-    "Other"
-  ],
-  "Other": [
-    "Uncategorized",
-    "One-off",
-    "Missing",
-    "Debts & Credits"
   ]
 }
