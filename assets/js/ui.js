@@ -35,8 +35,8 @@ let expenseModalInstance = null;
 /**
  * Returns the current system timezone offset in ±HH:mm format.
  */
-function getSystemTimezoneOffset() {
-  const offset = -new Date().getTimezoneOffset();
+function getTimezoneOffset(date = new Date()) {
+  const offset = -date.getTimezoneOffset();
   const absOffset = Math.abs(offset);
   const h = String(Math.floor(absOffset / 60)).padStart(2, '0');
   const m = String(absOffset % 60).padStart(2, '0');
@@ -53,14 +53,15 @@ function parseInlineDate(dateStr) {
   if (dateStr.includes('T')) {
     // If it has T but no timezone offset/Z, append system timezone
     if (!dateStr.match(/[Z+-]\d{2}:?\d{2}$/)) {
-      return dateStr + getSystemTimezoneOffset();
+      return dateStr + getTimezoneOffset(new Date(dateStr));
     }
     return dateStr;
   }
   
   // If it's just a date YYYY-MM-DD
   if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return `${dateStr}T00:00:00${getSystemTimezoneOffset()}`;
+    const d = new Date(dateStr);
+    return `${dateStr}T00:00:00${getTimezoneOffset(d)}`;
   }
   
   return '';
@@ -702,7 +703,8 @@ function handleTransactionSubmit(e) {
     const DateVal = document.getElementById('inputDate').value;
     const TimeVal = document.getElementById('inputTime') ? document.getElementById('inputTime').value : '00:00:00';
     
-    const isoDateTime = `${DateVal}T${TimeVal.length === 5 ? TimeVal + ':00' : TimeVal}${getSystemTimezoneOffset()}`;
+    const tempDate = new Date(`${DateVal}T${TimeVal}`);
+    const isoDateTime = `${DateVal}T${TimeVal.length === 5 ? TimeVal + ':00' : TimeVal}${getTimezoneOffset(tempDate)}`;
     
     const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
     const Description = document.getElementById('inputDescription').value;
