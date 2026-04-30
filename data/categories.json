@@ -7,14 +7,19 @@
     "Sales",
     "Reimbursement"
   ],
-  "Food": [
+  "Food & Dining": [
+    "Groceries",
     "Restaurant",
-    "Delivery & Takeaway",
+    "Delivery",
     "Canteen"
   ],
   "Bar": [
-    "Coffee & Snacks",
-    "Drinks"
+    "Breakfast",
+    "Snacks",
+    "Aperitifs",
+    "Drinks",
+    "Coffee",
+    "Soda"
   ],
   "Mixed": [
     "Expenses"
@@ -27,14 +32,11 @@
     "Home",
     "Gifts to Buy"
   ],
-  "Transportation": [
-    "Taxi",
-    "Public Transport",
-    "Trains",
-    "Buses",
-    "Ships",
-    "Airline",
-    "Rentals"
+  "Travel": [
+    "Transport",
+    "Accommodation",
+    "Fees",
+    "Tours"
   ],
   "Vehicle": [
     "Car Payment & Lease",
@@ -50,7 +52,6 @@
     "Clubs",
     "Parties",
     "Hobbies",
-    "Travel",
     "Other"
   ],
   "Health & Care": [
@@ -63,6 +64,8 @@
   "Sports": [
     "Running",
     "Tennis",
+    "Swimming",
+    "Gym & Fitness",
     "Other Sports"
   ],
   "Bills": [
