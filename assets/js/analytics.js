@@ -3,6 +3,8 @@ import { state } from './app.js';
 let pieChartInstance = null;
 let lineChartInstance = null;
 let detailedShowAll = false;
+let detailedIncomeShowAll = false;
+let detailedTagsShowAll = false;
 
 let periodListenerAttached = false;
 
@@ -33,20 +35,42 @@ export function renderAnalytics() {
       });
     }
 
-    // Attach Delegation for Category Toggles
-    const detailedList = document.getElementById('detailedCategoryList');
-    if (detailedList) {
-      detailedList.addEventListener('click', (e) => {
-        const item = e.target.closest('.category-item');
-        if (item) {
-          const subList = item.querySelector('.subcategory-list');
-          if (subList) {
-            const isExpanded = subList.classList.toggle('show');
-            item.classList.toggle('expanded', isExpanded);
-          }
-        }
+    const btnShowMoreIncome = document.getElementById('btnShowMoreIncome');
+    if (btnShowMoreIncome) {
+      btnShowMoreIncome.addEventListener('click', () => {
+        detailedIncomeShowAll = !detailedIncomeShowAll;
+        renderAnalytics();
       });
     }
+
+    const btnShowMoreTags = document.getElementById('btnShowMoreTags');
+    if (btnShowMoreTags) {
+      btnShowMoreTags.addEventListener('click', () => {
+        detailedTagsShowAll = !detailedTagsShowAll;
+        renderAnalytics();
+      });
+    }
+
+    // Attach Delegation for Category Toggles
+    const toggleDelegation = (e) => {
+      const item = e.target.closest('.category-item');
+      if (item) {
+        const subList = item.querySelector('.subcategory-list');
+        if (subList) {
+          const isExpanded = subList.classList.toggle('show');
+          item.classList.toggle('expanded', isExpanded);
+        }
+      }
+    };
+    
+    const detailedList = document.getElementById('detailedCategoryList');
+    if (detailedList) detailedList.addEventListener('click', toggleDelegation);
+    
+    const detailedIncomeList = document.getElementById('detailedIncomeList');
+    if (detailedIncomeList) detailedIncomeList.addEventListener('click', toggleDelegation);
+    
+    const detailedTagsList = document.getElementById('detailedTagsList');
+    if (detailedTagsList) detailedTagsList.addEventListener('click', toggleDelegation);
 
     periodListenerAttached = true;
   }
@@ -140,6 +164,8 @@ export function renderAnalytics() {
   updateLineChart(state.transactions, periodLabel);
   updateComparisonMetrics(state.transactions);
   renderDetailedCategoryBreakdown(transactions, periodLabel);
+  renderDetailedIncomeBreakdown(transactions, periodLabel);
+  renderDetailedTagsBreakdown(transactions, periodLabel);
 }
 
 /**
@@ -474,6 +500,201 @@ function renderDetailedCategoryBreakdown(transactions, periodLabel) {
             </div>
             <div class="category-progress">
               <div class="category-progress-bar" style="width: ${percentage}%"></div>
+            </div>
+          </div>
+          <div class="ms-3">
+            <i class="bi bi-chevron-down chevron-icon text-muted"></i>
+          </div>
+        </div>
+        <div class="subcategory-list">
+          ${subcatsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Renders the hierarchical list of income sources (categories).
+ */
+function renderDetailedIncomeBreakdown(transactions, periodLabel) {
+  const container = document.getElementById('detailedIncomeList');
+  const footer = document.getElementById('detailedIncomeFooter');
+  const periodBadge = document.getElementById('detailedIncomePeriod');
+  const subtitle = document.getElementById('detailedIncomeSubtitle');
+  
+  if (!container) return;
+  
+  if (periodBadge) periodBadge.textContent = periodLabel;
+  if (subtitle) subtitle.textContent = `(${periodLabel})`;
+
+  const data = {};
+  let grandTotal = 0;
+
+  transactions.forEach(t => {
+    if (t.Amount > 0) {
+      const amt = t.Amount;
+      const cat = t.Category || 'Uncategorized';
+      const sub = t.Subcategory || '(No Subcategory)';
+      
+      grandTotal += amt;
+      
+      if (!data[cat]) data[cat] = { total: 0, subcategories: {} };
+      data[cat].total += amt;
+      
+      if (!data[cat].subcategories[sub]) data[cat].subcategories[sub] = 0;
+      data[cat].subcategories[sub] += amt;
+    }
+  });
+
+  const sortedCategories = Object.entries(data).sort(([, a], [, b]) => b.total - a.total);
+  const totalCount = sortedCategories.length;
+  const displayCount = detailedIncomeShowAll ? totalCount : 5;
+  const visibleCategories = sortedCategories.slice(0, displayCount);
+
+  if (footer) {
+    footer.classList.toggle('d-none', totalCount <= 5);
+    const btn = footer.querySelector('button');
+    if (btn) {
+      btn.innerHTML = detailedIncomeShowAll 
+        ? 'Show Less <i class="bi bi-chevron-up"></i>' 
+        : `Show More (${totalCount - 5} others) <i class="bi bi-chevron-down"></i>`;
+    }
+  }
+
+  if (totalCount === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-muted">No income recorded for this period.</div>';
+    return;
+  }
+
+  container.innerHTML = visibleCategories.map(([catName, catData]) => {
+    const percentage = grandTotal > 0 ? (catData.total / grandTotal * 100).toFixed(1) : 0;
+    
+    const sortedSubcats = Object.entries(catData.subcategories).sort(([, a], [, b]) => b - a);
+    const subcatsHtml = sortedSubcats.map(([subName, subAmt]) => `
+      <div class="subcategory-item d-flex justify-content-between align-items-center">
+        <span class="text-muted">${subName}</span>
+        <span class="fw-semibold text-success">+€${subAmt.toFixed(2)}</span>
+      </div>
+    `).join('');
+
+    return `
+      <div class="category-item list-group-item p-0 border-bottom">
+        <div class="category-header d-flex align-items-center">
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <div>
+                <span class="fw-bold d-block" style="font-size: 1.1rem;">${catName}</span>
+                <span class="text-muted small">Total for ${periodLabel}</span>
+              </div>
+              <div class="text-end">
+                <span class="category-amount-badge text-success" style="font-size: 1.1rem; font-weight: 700;">+€${catData.total.toFixed(2)}</span>
+                <div class="text-muted small">${percentage}%</div>
+              </div>
+            </div>
+            <div class="category-progress">
+              <div class="category-progress-bar bg-success" style="width: ${percentage}%"></div>
+            </div>
+          </div>
+          <div class="ms-3">
+            <i class="bi bi-chevron-down chevron-icon text-muted"></i>
+          </div>
+        </div>
+        <div class="subcategory-list">
+          ${subcatsHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Renders the list of tags and their total amounts.
+ */
+function renderDetailedTagsBreakdown(transactions, periodLabel) {
+  const container = document.getElementById('detailedTagsList');
+  const footer = document.getElementById('detailedTagsFooter');
+  const periodBadge = document.getElementById('detailedTagsPeriod');
+  const subtitle = document.getElementById('detailedTagsSubtitle');
+  
+  if (!container) return;
+  
+  if (periodBadge) periodBadge.textContent = periodLabel;
+  if (subtitle) subtitle.textContent = `(${periodLabel})`;
+
+  const data = {};
+  let totalTaggedVolume = 0;
+
+  transactions.forEach(t => {
+    if (t.Tags && t.Tags.trim()) {
+      const tags = t.Tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      const absAmt = Math.abs(t.Amount);
+      
+      tags.forEach(tag => {
+        if (!data[tag]) data[tag] = { net: 0, volume: 0, income: 0, expenses: 0 };
+        data[tag].net += t.Amount;
+        data[tag].volume += absAmt;
+        if (t.Amount >= 0) data[tag].income += t.Amount;
+        else data[tag].expenses += absAmt;
+      });
+    }
+  });
+
+  let sumOfAllTagVolumes = Object.values(data).reduce((acc, val) => acc + val.volume, 0);
+
+  const sortedTags = Object.entries(data).sort(([, a], [, b]) => b.volume - a.volume);
+  const totalCount = sortedTags.length;
+  const displayCount = detailedTagsShowAll ? totalCount : 5;
+  const visibleTags = sortedTags.slice(0, displayCount);
+
+  if (footer) {
+    footer.classList.toggle('d-none', totalCount <= 5);
+    const btn = footer.querySelector('button');
+    if (btn) {
+      btn.innerHTML = detailedTagsShowAll 
+        ? 'Show Less <i class="bi bi-chevron-up"></i>' 
+        : `Show More (${totalCount - 5} others) <i class="bi bi-chevron-down"></i>`;
+    }
+  }
+
+  if (totalCount === 0) {
+    container.innerHTML = '<div class="p-4 text-center text-muted">No tags recorded for this period.</div>';
+    return;
+  }
+
+  container.innerHTML = visibleTags.map(([tagName, tagData]) => {
+    const percentage = sumOfAllTagVolumes > 0 ? (tagData.volume / sumOfAllTagVolumes * 100).toFixed(1) : 0;
+    
+    const subcatsHtml = `
+      <div class="subcategory-item d-flex justify-content-between align-items-center">
+        <span class="text-muted">Income</span>
+        <span class="fw-semibold text-success">+€${tagData.income.toFixed(2)}</span>
+      </div>
+      <div class="subcategory-item d-flex justify-content-between align-items-center">
+        <span class="text-muted">Expenses</span>
+        <span class="fw-semibold text-danger">-€${tagData.expenses.toFixed(2)}</span>
+      </div>
+    `;
+
+    const netClass = tagData.net >= 0 ? 'text-success' : 'text-danger';
+    const netPrefix = tagData.net > 0 ? '+' : '';
+
+    return `
+      <div class="category-item list-group-item p-0 border-bottom">
+        <div class="category-header d-flex align-items-center">
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <div>
+                <span class="fw-bold d-block" style="font-size: 1.1rem;"><i class="bi bi-tag-fill text-info me-1 small"></i>${tagName}</span>
+                <span class="text-muted small">Net for ${periodLabel}</span>
+              </div>
+              <div class="text-end">
+                <span class="category-amount-badge ${netClass}" style="font-size: 1.1rem; font-weight: 700;">${netPrefix}€${tagData.net.toFixed(2)}</span>
+                <div class="text-muted small">${percentage}% of tagged vol</div>
+              </div>
+            </div>
+            <div class="category-progress">
+              <div class="category-progress-bar bg-info" style="width: ${percentage}%"></div>
             </div>
           </div>
           <div class="ms-3">

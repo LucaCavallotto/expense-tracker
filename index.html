@@ -302,8 +302,8 @@
           </div>
 
           <div class="row">
-            <div class="col-12 mb-4">
-              <div class="card shadow-sm">
+            <div class="col-xl-4 col-lg-12 mb-4">
+              <div class="card shadow-sm h-100">
                 <div
                   class="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center">
                   <h5 class="card-title mb-0">Detailed Spending Breakdown <small class="text-muted fw-normal"
@@ -319,6 +319,52 @@
                 <div class="card-footer bg-transparent border-top-0 text-center pb-3 d-none"
                   id="detailedBreakdownFooter">
                   <button id="btnShowMoreCategories" class="btn btn-link text-decoration-none fw-semibold">
+                    Show More <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-6 mb-4">
+              <div class="card shadow-sm h-100">
+                <div
+                  class="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center">
+                  <h5 class="card-title mb-0">Detailed Income Breakdown <small class="text-muted fw-normal"
+                      id="detailedIncomeSubtitle">(Last 12 Months)</small></h5>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle"
+                    id="detailedIncomePeriod">Overall</span>
+                </div>
+                <div class="card-body p-0">
+                  <div id="detailedIncomeList" class="list-group list-group-flush">
+                    <!-- Dynamically populated -->
+                  </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 text-center pb-3 d-none"
+                  id="detailedIncomeFooter">
+                  <button id="btnShowMoreIncome" class="btn btn-link text-decoration-none fw-semibold text-success">
+                    Show More <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-6 mb-4">
+              <div class="card shadow-sm h-100">
+                <div
+                  class="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center">
+                  <h5 class="card-title mb-0">Detailed Tags Breakdown <small class="text-muted fw-normal"
+                      id="detailedTagsSubtitle">(Last 12 Months)</small></h5>
+                  <span class="badge bg-info-subtle text-info border border-info-subtle"
+                    id="detailedTagsPeriod">Overall</span>
+                </div>
+                <div class="card-body p-0">
+                  <div id="detailedTagsList" class="list-group list-group-flush">
+                    <!-- Dynamically populated -->
+                  </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 text-center pb-3 d-none"
+                  id="detailedTagsFooter">
+                  <button id="btnShowMoreTags" class="btn btn-link text-decoration-none fw-semibold text-info">
                     Show More <i class="bi bi-chevron-down"></i>
                   </button>
                 </div>
