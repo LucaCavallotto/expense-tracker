@@ -26,7 +26,7 @@ A modular, browser-based personal finance manager that works directly with your 
 ### 1. Getting Started
 Simply open the `index.html` file in any modern web browser.
 - **New Users:** Click **"Create New File"** to generate a fresh expense CSV on your computer.
-- **Trial:** You can also use the included `example_data.csv` to explore the app's features immediately.
+- **Trial:** You can also use the included `demo.csv` to explore the app's features immediately.
 - **Existing Users:** Click **"Browse Files"** or simply **Drag & Drop** your existing CSV anywhere on the screen.
 
 ### 2. Adding Transactions
@@ -60,7 +60,7 @@ When you use **"Create New File"**, the app automatically generates a file with 
 
 This application is entirely client-side. Your financial data never leaves your computer and is never uploaded to any server. All processing happens locally in your browser.
 
-**Privacy Note:** The project includes a `.gitignore` rule that prevents any CSV files (except the provided `example_data.csv`) from being uploaded to Git repositories, providing an extra layer of protection for your personal data.
+**Privacy Note:** The project includes a `.gitignore` rule that prevents any CSV files (except the provided `demo.csv`) from being uploaded to Git repositories, providing an extra layer of protection for your personal data.
 
 ---
 *"Cash Rules Everything Around Me"*
