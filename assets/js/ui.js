@@ -181,15 +181,27 @@ export function setupUIEvents() {
     });
   }
 
-  // Tags Suggestions
+  // Tags Suggestions (Modal)
   const inputTags = document.getElementById('inputTags');
   if (inputTags) {
-    inputTags.addEventListener('input', (e) => showTagSuggestions(e.target.value));
-    inputTags.addEventListener('focus', (e) => showTagSuggestions(e.target.value));
+    inputTags.addEventListener('input', () => showTagSuggestions('inputTags', 'tagsSuggestionBox'));
+    inputTags.addEventListener('focus', () => showTagSuggestions('inputTags', 'tagsSuggestionBox'));
     // Close suggestions when clicking outside
     document.addEventListener('click', (e) => {
       if (!inputTags.contains(e.target) && !document.getElementById('tagsSuggestionBox').contains(e.target)) {
         document.getElementById('tagsSuggestionBox').classList.add('d-none');
+      }
+    });
+  }
+
+  // Tags Suggestions (Bulk)
+  const bulkTagsInput = document.getElementById('bulkTagsInput');
+  if (bulkTagsInput) {
+    bulkTagsInput.addEventListener('input', () => showTagSuggestions('bulkTagsInput', 'bulkTagsSuggestionBox'));
+    bulkTagsInput.addEventListener('focus', () => showTagSuggestions('bulkTagsInput', 'bulkTagsSuggestionBox'));
+    document.addEventListener('click', (e) => {
+      if (!bulkTagsInput.contains(e.target) && !document.getElementById('bulkTagsSuggestionBox').contains(e.target)) {
+        document.getElementById('bulkTagsSuggestionBox').classList.add('d-none');
       }
     });
   }
@@ -227,6 +239,11 @@ export function setupUIEvents() {
   const btnBulkApplyCategory = document.getElementById('btnBulkApplyCategory');
   if (btnBulkApplyCategory) {
     btnBulkApplyCategory.addEventListener('click', handleBulkApplyCategory);
+  }
+
+  const btnBulkApplyTags = document.getElementById('btnBulkApplyTags');
+  if (btnBulkApplyTags) {
+    btnBulkApplyTags.addEventListener('click', handleBulkApplyTags);
   }
 }
 
@@ -553,10 +570,12 @@ function updateSelectedCount() {
   }
   
   const bulkApplyBtn = document.getElementById('btnBulkApplyCategory');
+  const bulkTagsBtn = document.getElementById('btnBulkApplyTags');
   const bulkDeleteBtn = document.getElementById('btnBulkDelete');
   const hasSelection = state.selectedIds.length > 0;
   
   if (bulkApplyBtn) bulkApplyBtn.disabled = !hasSelection;
+  if (bulkTagsBtn) bulkTagsBtn.disabled = !hasSelection;
   if (bulkDeleteBtn) bulkDeleteBtn.disabled = !hasSelection;
 }
 
@@ -588,6 +607,31 @@ function handleBulkApplyCategory() {
     markUnsavedChanges();
     toggleSelectionMode(false);
     showStatusMessage(`Updated category for ${idsToUpdate.size} transactions`);
+  }
+}
+
+function handleBulkApplyTags() {
+  const tagsInput = document.getElementById('bulkTagsInput').value;
+  if (!tagsInput || state.selectedIds.length === 0) return;
+  
+  const newTags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
+  if (newTags.length === 0) return;
+
+  if (confirm(`Add ${newTags.length} tag(s) to ${state.selectedIds.length} transactions?`)) {
+    const idsToUpdate = new Set(state.selectedIds);
+    state.transactions.forEach(t => {
+      if (idsToUpdate.has(t.id)) {
+        let existingTags = (t.Tags || '').split(',').map(tg => tg.trim()).filter(tg => tg);
+        const combined = [...new Set([...existingTags, ...newTags])];
+        t.Tags = combined.join(', ');
+      }
+    });
+    
+    document.getElementById('bulkTagsInput').value = '';
+    updateAllTags();
+    markUnsavedChanges();
+    toggleSelectionMode(false);
+    showStatusMessage(`Updated tags for ${idsToUpdate.size} transactions`);
   }
 }
 
@@ -759,9 +803,10 @@ function updateAllTags() {
 /**
  * Shows suggestions for the current word being typed in the tags input.
  */
-function showTagSuggestions(inputVal) {
-  const box = document.getElementById('tagsSuggestionBox');
-  const input = document.getElementById('inputTags');
+function showTagSuggestions(inputId, boxId) {
+  const box = document.getElementById(boxId);
+  const input = document.getElementById(inputId);
+  const inputVal = input.value;
   
   // Find the tag currently being typed (at cursor position)
   const cursorPos = input.selectionStart;
@@ -790,7 +835,7 @@ function showTagSuggestions(inputVal) {
     item.type = 'button';
     item.className = 'list-group-item list-group-item-action py-2 small';
     item.textContent = match;
-    item.addEventListener('click', () => applyTagSuggestion(match));
+    item.addEventListener('click', () => applyTagSuggestion(match, inputId, boxId));
     box.appendChild(item);
   });
   
@@ -800,8 +845,8 @@ function showTagSuggestions(inputVal) {
 /**
  * Replaces the current word in the tags input with the selected suggestion.
  */
-function applyTagSuggestion(suggestion) {
-  const input = document.getElementById('inputTags');
+function applyTagSuggestion(suggestion, inputId, boxId) {
+  const input = document.getElementById(inputId);
   const val = input.value;
   const cursorPos = input.selectionStart;
   
@@ -831,7 +876,7 @@ function applyTagSuggestion(suggestion) {
   input.value = finalVal + (finalVal ? ', ' : '');
   input.focus();
   
-  document.getElementById('tagsSuggestionBox').classList.add('d-none');
+  document.getElementById(boxId).classList.add('d-none');
 }
 
 /**
