@@ -60,9 +60,11 @@ The project follows a modular ES6 design, separating concerns between state, UI 
 - **State Management:**
     - All shared data resides in the `state` object in `app.js`.
     - Always call `markUnsavedChanges()` after modifying `state.transactions`.
+    - `viewOnlyMode` state controls UI visibility for editing elements and is auto-detected for mobile.
 - **UI Logic:**
     - Separate pure data calculations from DOM manipulation where possible.
     - Use `renderApp()` as the main entry point to toggle visibility between Landing and App views.
+    - `renderTransactions()` and `renderAnalytics()` handle the heavy lifting for data display.
 
 ### 3. Documentation & Commits
 - Keep comments focused on "why" rather than "what."
@@ -94,3 +96,5 @@ The program expects a specific column order for CSV compatibility:
 - **Sticky Footer:** Must wrap main content in a `<main>` tag with `flex: 1 0 auto` to work with the vertical flexbox body.
 - **Bulk Parsing:** The `Quick Inline Entry` textarea uses `\n` splitting; ensure empty lines are filtered out to prevent parsing errors.
 - **Date Handling:** `parseInlineDate` handles both standard `YYYY-MM-DD` and full ISO timestamps (detecting time automatically).
+- **Mobile Compatibility:** File saving on iOS/iPadOS is restrictive; "View Only Mode" is used as a safety fallback to prevent confusing save prompts or accidental data loss on mobile devices.
+- **Analytics Performance:** Hierarchical breakdowns use interactive "Show More" toggles to maintain performance and UI cleanliness when dealing with large numbers of categories or tags.

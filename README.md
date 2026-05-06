@@ -5,9 +5,10 @@ A modular, browser-based personal finance manager that works directly with your 
 ## Key Features
 
 - **Direct File Access:** Uses the modern File System Access API to open and save CSV files directly to your device.
+- **View Only Mode:** Automatically protects data on mobile devices (iOS/iPadOS) where file saving is restrictive, with a manual lock toggle for desktop users.
 - **Bulk Entry:** Smart "Quick Inline Entry" supports pasting multiple transactions at once (e.g., from bank statements).
-- **Responsive Dashboard:** View your current net delta and recent activity at a glance.
-- **Visual Analytics:** Interactive charts showing expenses by category and spending trends over time.
+- **Responsive Dashboard:** View your current net delta and monthly spend comparisons at a glance.
+- **Comprehensive Analytics:** Detailed hierarchical breakdowns for Spending, Income, and Tags with interactive "Show More" functionality.
 - **Advanced Search & Sorting:** Quickly find transactions by description or sort by any column.
 - **Dark Mode Support:** Automatically syncs with your system's light/dark preference.
 
