@@ -265,16 +265,25 @@ export async function saveFile() {
       await writable.close();
       showStatusMessage("Changes saved successfully!");
     } else {
-      // Fallback download for iOS / Unsupported browsers
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', state.fileName || 'expenses.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showStatusMessage("File downloaded!");
+      // Fallback for iOS / Unsupported browsers
+      const file = new File([csvContent], state.fileName || 'expenses.csv', { type: 'text/csv;charset=utf-8;' });
+      
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: state.fileName || 'expenses.csv',
+          });
+          showStatusMessage("File shared/saved successfully!");
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            console.error("Share failed", error);
+            fallbackDownload(csvContent, state.fileName);
+          }
+        }
+      } else {
+        fallbackDownload(csvContent, state.fileName);
+      }
     }
 
     // Commit changes to original state
@@ -286,6 +295,21 @@ export async function saveFile() {
     console.error("Failed to save file", error);
     alert("Failed to save file. Ensure you have granted the necessary permissions.");
   }
+}
+
+/**
+ * Fallback to standard browser download via anchor tag.
+ */
+function fallbackDownload(csvContent, fileName) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', fileName || 'expenses.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showStatusMessage("File downloaded!");
 }
 
 /**
