@@ -48,9 +48,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupFileSystemEvents();
   setupUIEvents();
 
-  // Prevent user from losing unsaved data on page close/refresh
+  // Prevent user from losing unsaved data or their active file session on page close/refresh
   window.addEventListener('beforeunload', (e) => {
-    if (state.hasUnsavedChanges) {
+    if (state.fileName || state.hasUnsavedChanges) {
       e.preventDefault();
       e.returnValue = ''; // Standard way to trigger browser's close prompt
     }

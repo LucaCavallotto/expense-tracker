@@ -5,7 +5,7 @@ const categoryMap = {
   'food': { icon: 'bi-cup-hot-fill', color: 'bg-danger' },
   'dining': { icon: 'bi-shop', color: 'bg-danger' },
   'restaurant': { icon: 'bi-shop', color: 'bg-danger' },
-  'rent': { icon: 'bi-house-fill', color: 'bg-warning text-dark' }, 
+  'rent': { icon: 'bi-house-fill', color: 'bg-warning text-dark' },
   'housing': { icon: 'bi-house-fill', color: 'bg-warning text-dark' },
   'phone': { icon: 'bi-telephone-fill', color: 'bg-primary' },
   'utilities': { icon: 'bi-lightning-charge-fill', color: 'bg-primary' },
@@ -48,7 +48,7 @@ function getTimezoneOffset(date = new Date()) {
  */
 function parseInlineDate(dateStr) {
   if (!dateStr) return '';
-  
+
   // Check if it's already a full ISO string (with T and optional timezone)
   if (dateStr.includes('T')) {
     // If it has T but no timezone offset/Z, append system timezone
@@ -57,13 +57,13 @@ function parseInlineDate(dateStr) {
     }
     return dateStr;
   }
-  
+
   // If it's just a date YYYY-MM-DD
   if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
     const d = new Date(dateStr);
     return `${dateStr}T00:00:00${getTimezoneOffset(d)}`;
   }
-  
+
   return '';
 }
 
@@ -77,12 +77,12 @@ export function setupUIEvents() {
     // Reset form every time the modal closes
     modalElement.addEventListener('hidden.bs.modal', resetForm);
   }
-  
+
   const expenseForm = document.getElementById('expenseForm');
   if (expenseForm) {
     expenseForm.addEventListener('submit', handleTransactionSubmit);
   }
-  
+
   const inlineInput = document.getElementById('inlineInput');
   if (inlineInput) {
     inlineInput.addEventListener('input', (e) => {
@@ -93,18 +93,18 @@ export function setupUIEvents() {
         document.getElementById('inputDescription').required = true;
         return;
       }
-      
+
       const lines = val.split('\n').map(l => l.trim()).filter(l => l);
-      
+
       // If multiple lines, make standard fields non-mandatory so the form can submit
       const isMultiLine = lines.length > 1;
       document.getElementById('inputDate').required = !isMultiLine;
       document.getElementById('inputAmount').required = !isMultiLine;
       document.getElementById('inputDescription').required = !isMultiLine;
-      
+
       const firstLine = lines[0];
       const parts = firstLine.split(',').map(p => p.trim());
-      
+
       if (parts.length > 0 && parts[0]) {
         const isoStr = parseInlineDate(parts[0]);
         if (isoStr) {
@@ -116,7 +116,7 @@ export function setupUIEvents() {
           }
         }
       }
-      
+
       if (parts.length > 1 && parts[1]) {
         let amountStr = parts[1].replace(',', '.').replace(/[^\d\.\+\-]/g, '');
         const amountFloat = parseFloat(amountStr);
@@ -124,13 +124,13 @@ export function setupUIEvents() {
           document.getElementById('inputAmount').value = amountFloat;
         }
       }
-      
+
       if (parts.length > 2 && parts[2]) {
         document.getElementById('inputDescription').value = parts.slice(2).join(', ');
       }
     });
   }
-  
+
   const btnDelete = document.getElementById('btnDeleteTransactionModal');
   if (btnDelete) {
     btnDelete.addEventListener('click', () => {
@@ -141,14 +141,14 @@ export function setupUIEvents() {
       }
     });
   }
-  
+
   const inputCategory = document.getElementById('inputCategory');
   if (inputCategory) {
     inputCategory.addEventListener('change', handleCategoryChange);
   }
 
 
-  
+
   // Attach sorting events to sortable headers
   document.querySelectorAll('th.sortable').forEach(th => {
     th.addEventListener('click', () => {
@@ -255,14 +255,14 @@ export function renderApp() {
   const appView = document.getElementById('appView');
   const navActions = document.getElementById('navActions');
   const currentFileName = document.getElementById('currentFileName');
-  
+
   if (state.fileName) {
     // A file is open
     landingView.classList.add('d-none');
     appView.classList.remove('d-none');
     navActions.classList.remove('d-none');
     currentFileName.textContent = state.fileName;
-    
+
     populateCategoriesDropdown();
     updateAllTags();
     renderTransactions();
@@ -272,13 +272,13 @@ export function renderApp() {
     appView.classList.add('d-none');
     navActions.classList.add('d-none');
     currentFileName.textContent = '';
-    
+
     // Clear search input on close
     const inputSearch = document.getElementById('inputSearchTransaction');
     if (inputSearch) inputSearch.value = '';
     const btnClear = document.getElementById('btnClearSearch');
     if (btnClear) btnClear.classList.add('d-none');
-    
+
     toggleSelectionMode(false);
   }
 }
@@ -289,10 +289,10 @@ export function renderApp() {
 function populateCategoriesDropdown() {
   const select = document.getElementById('inputCategory');
   const bulkSelect = document.getElementById('bulkCategorySelect');
-  
+
   const options = '<option value="" disabled selected>Select Category</option>';
   const bulkOptions = '<option value="" disabled selected>Choose...</option>';
-  
+
   let optionsHtml = '';
   Object.keys(state.categories).forEach(cat => {
     optionsHtml += `<option value="${cat}">${cat}</option>`;
@@ -309,7 +309,7 @@ function handleCategoryChange(e) {
   const category = e.target.value;
   const subSelect = document.getElementById('inputSubcategory');
   subSelect.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
-  
+
   if (state.categories[category]) {
     state.categories[category].forEach(sub => {
       const opt = document.createElement('option');
@@ -329,7 +329,7 @@ function resetForm() {
   document.getElementById('inlineInput').value = '';
   document.getElementById('expenseModalLabel').textContent = 'Add Transaction';
   document.getElementById('inputSubcategory').innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
-  
+
   document.getElementById('inputDate').required = true;
   document.getElementById('inputAmount').required = true;
   document.getElementById('inputDescription').required = true;
@@ -347,13 +347,13 @@ function formatDate(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
   if (isNaN(date)) return isoString;
-  
+
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
-  
+
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
@@ -364,10 +364,10 @@ export function renderTransactions() {
   const tbody = document.getElementById('transactionsTbody');
   const emptyState = document.getElementById('emptyState');
   const tableContainer = document.getElementById('transactionsTable').parentElement;
-  
+
   let filteredTransactions = state.transactions;
   if (state.searchQuery) {
-    filteredTransactions = state.transactions.filter(t => 
+    filteredTransactions = state.transactions.filter(t =>
       t.Description.toLowerCase().includes(state.searchQuery) ||
       t.Amount.toString().includes(state.searchQuery) ||
       (t.Category || '').toLowerCase().includes(state.searchQuery) ||
@@ -384,12 +384,12 @@ export function renderTransactions() {
     tableContainer.classList.remove('d-none');
     emptyState.classList.add('d-none');
   }
-  
+
   // Copy and sort the data based on current state parameters
   const sorted = [...filteredTransactions].sort((a, b) => {
     const col = state.sort.column;
     const dir = state.sort.direction === 'asc' ? 1 : -1;
-    
+
     if (col === 'Amount') {
       return (a.Amount - b.Amount) * dir;
     } else if (col === 'Date') {
@@ -402,12 +402,12 @@ export function renderTransactions() {
   });
 
   tbody.innerHTML = '';
-  
+
   let lastYear = null;
   let lastMonth = null;
   let lastDate = null;
   const isDateSorted = state.sort.column === 'Date';
-  
+
   // Build and insert DOM rows
   let txCounter = 0;
   sorted.forEach((t) => {
@@ -432,7 +432,7 @@ export function renderTransactions() {
         if (month !== lastMonth) {
           const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
           const monthName = monthNames[parseInt(month, 10) - 1] || month;
-          
+
           const monthTr = document.createElement('tr');
           monthTr.className = 'month-divider-row divider-row';
           monthTr.innerHTML = `
@@ -450,13 +450,13 @@ export function renderTransactions() {
       if (txCounter % 2 === 1) tr.classList.add('bg-body-tertiary');
       tr.setAttribute('data-id', t.id);
       txCounter++;
-      
+
       const isIncome = t.Amount >= 0;
       const amountStr = isIncome ? `+${t.Amount.toFixed(2)} €` : `${t.Amount.toFixed(2)} €`;
       const amountClass = isIncome ? 'text-success fw-bold' : 'text-danger fw-bold';
       const meta = getCategoryMeta(t.Category);
       const isSelected = state.selectedIds.includes(t.id);
-      
+
       tr.innerHTML = `
         <!-- Selection Checkbox -->
         <td class="selection-column ${state.isSelectionMode ? '' : 'd-none'} text-center">
@@ -501,12 +501,12 @@ export function renderTransactions() {
       console.error("Failed to render transaction:", t, error);
     }
   });
-  
+
   // Mobile row click
   tbody.querySelectorAll('.mobile-row-click').forEach(row => {
     row.addEventListener('click', (e) => {
       if (e.target.closest('button')) return; // Ignore if clicking a button inside (like desktop edit/del)
-      
+
       const id = row.getAttribute('data-id');
       if (state.isSelectionMode) {
         toggleIdSelection(id);
@@ -523,7 +523,7 @@ export function renderTransactions() {
       toggleIdSelection(cb.getAttribute('data-id'));
     });
   });
-  
+
   // Attach inline edit/delete listeners dynamically safely
   tbody.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -537,7 +537,7 @@ export function renderTransactions() {
       deleteTransaction(btn.getAttribute('data-id'));
     });
   });
-  
+
   // Cascade update to Analytics when data changes
   renderAnalytics();
 }
@@ -545,20 +545,20 @@ export function renderTransactions() {
 function toggleSelectionMode(enabled) {
   state.isSelectionMode = enabled;
   state.selectedIds = [];
-  
+
   const bulkMenu = document.getElementById('bulkActionsMenu');
   const btnSelect = document.getElementById('btnSelectMode');
   const btnAdd = document.getElementById('btnAddExpense');
   const selectionCols = document.querySelectorAll('.selection-column');
   const selectAllCheck = document.getElementById('selectAllCheckbox');
-  
+
   if (bulkMenu) bulkMenu.classList.toggle('d-none', !enabled);
   if (btnSelect) btnSelect.classList.toggle('d-none', enabled);
   if (btnAdd) btnAdd.classList.toggle('d-none', enabled);
-  
+
   selectionCols.forEach(col => col.classList.toggle('d-none', !enabled));
   if (selectAllCheck) selectAllCheck.checked = false;
-  
+
   updateSelectedCount();
   renderTransactions();
 }
@@ -568,12 +568,12 @@ function updateSelectedCount() {
   if (countEl) {
     countEl.textContent = state.selectedIds.length;
   }
-  
+
   const bulkApplyBtn = document.getElementById('btnBulkApplyCategory');
   const bulkTagsBtn = document.getElementById('btnBulkApplyTags');
   const bulkDeleteBtn = document.getElementById('btnBulkDelete');
   const hasSelection = state.selectedIds.length > 0;
-  
+
   if (bulkApplyBtn) bulkApplyBtn.disabled = !hasSelection;
   if (bulkTagsBtn) bulkTagsBtn.disabled = !hasSelection;
   if (bulkDeleteBtn) bulkDeleteBtn.disabled = !hasSelection;
@@ -581,11 +581,11 @@ function updateSelectedCount() {
 
 function handleBulkDelete() {
   if (state.selectedIds.length === 0) return;
-  
+
   if (confirm(`Are you sure you want to delete ${state.selectedIds.length} transactions?`)) {
     const idsToDelete = new Set(state.selectedIds);
     state.transactions = state.transactions.filter(t => !idsToDelete.has(t.id));
-    
+
     markUnsavedChanges();
     toggleSelectionMode(false);
     showStatusMessage(`Deleted ${idsToDelete.size} transactions`, 'danger');
@@ -595,7 +595,7 @@ function handleBulkDelete() {
 function handleBulkApplyCategory() {
   const category = document.getElementById('bulkCategorySelect').value;
   if (!category || state.selectedIds.length === 0) return;
-  
+
   if (confirm(`Apply category "${category}" to ${state.selectedIds.length} transactions?`)) {
     const idsToUpdate = new Set(state.selectedIds);
     state.transactions.forEach(t => {
@@ -603,7 +603,7 @@ function handleBulkApplyCategory() {
         t.Category = category;
       }
     });
-    
+
     markUnsavedChanges();
     toggleSelectionMode(false);
     showStatusMessage(`Updated category for ${idsToUpdate.size} transactions`);
@@ -613,7 +613,7 @@ function handleBulkApplyCategory() {
 function handleBulkApplyTags() {
   const tagsInput = document.getElementById('bulkTagsInput').value;
   if (!tagsInput || state.selectedIds.length === 0) return;
-  
+
   const newTags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
   if (newTags.length === 0) return;
 
@@ -626,7 +626,7 @@ function handleBulkApplyTags() {
         t.Tags = combined.join(', ');
       }
     });
-    
+
     document.getElementById('bulkTagsInput').value = '';
     updateAllTags();
     markUnsavedChanges();
@@ -641,9 +641,9 @@ function handleBulkApplyTags() {
 function editTransaction(id) {
   const t = state.transactions.find(tx => tx.id === id);
   if (!t) return;
-  
+
   document.getElementById('editTransactionId').value = t.id;
-  
+
   if (t.DateTime) {
     const [d, tPart] = t.DateTime.split('T');
     document.getElementById('inputDate').value = d;
@@ -651,23 +651,23 @@ function editTransaction(id) {
       document.getElementById('inputTime').value = tPart.substring(0, 8);
     }
   }
-  
+
   document.getElementById('inputAmount').value = t.Amount;
   document.getElementById('inputDescription').value = t.Description;
-  
+
   const catSelect = document.getElementById('inputCategory');
   catSelect.value = t.Category;
   catSelect.dispatchEvent(new Event('change')); // Trigger population of subcategory dropdown
-  
+
   document.getElementById('inputSubcategory').value = t.Subcategory;
   document.getElementById('inputTags').value = t.Tags;
   document.getElementById('inputNotes').value = t.Notes;
-  
+
   document.getElementById('expenseModalLabel').textContent = 'Edit Transaction';
-  
+
   const btnDelete = document.getElementById('btnDeleteTransactionModal');
   if (btnDelete) btnDelete.classList.remove('d-none');
-  
+
   if (expenseModalInstance) expenseModalInstance.show();
 }
 
@@ -678,13 +678,13 @@ function toggleIdSelection(id) {
   } else {
     state.selectedIds.splice(index, 1);
   }
-  
+
   // Sync the Select All checkbox
   const selectAllCheck = document.getElementById('selectAllCheckbox');
   if (selectAllCheck) {
     selectAllCheck.checked = state.selectedIds.length === state.transactions.length && state.transactions.length > 0;
   }
-  
+
   renderTransactions();
   updateSelectedCount();
 }
@@ -705,12 +705,12 @@ function deleteTransaction(id) {
  */
 function handleTransactionSubmit(e) {
   e.preventDefault();
-  
+
   const id = document.getElementById('editTransactionId').value;
   const inlineInput = document.getElementById('inlineInput');
   const inlineVal = inlineInput ? inlineInput.value.trim() : '';
   const lines = inlineVal.split('\n').map(l => l.trim()).filter(l => l);
-  
+
   const Category = document.getElementById('inputCategory').value || 'Uncategorized';
   const Subcategory = document.getElementById('inputSubcategory').value || '';
   const Tags = document.getElementById('inputTags').value;
@@ -721,16 +721,16 @@ function handleTransactionSubmit(e) {
     lines.forEach((line, index) => {
       const parts = line.split(',').map(p => p.trim());
       if (parts.length < 2) return;
-      
+
       const isoStr = parseInlineDate(parts[0]);
       if (!isoStr) return;
-      
+
       let amountStr = parts[1].replace(',', '.').replace(/[^\d\.\+\-]/g, '');
       const amountFloat = parseFloat(amountStr);
       if (isNaN(amountFloat)) return;
-      
+
       const desc = parts.length > 2 ? parts.slice(2).join(', ') : '';
-      
+
       state.transactions.push({
         id: crypto.randomUUID(),
         DateTime: isoStr,
@@ -746,13 +746,13 @@ function handleTransactionSubmit(e) {
     // Standard Single Add/Edit
     const DateVal = document.getElementById('inputDate').value;
     const TimeVal = document.getElementById('inputTime') ? document.getElementById('inputTime').value : '00:00:00';
-    
+
     const tempDate = new Date(`${DateVal}T${TimeVal}`);
     const isoDateTime = `${DateVal}T${TimeVal.length === 5 ? TimeVal + ':00' : TimeVal}${getTimezoneOffset(tempDate)}`;
-    
+
     const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
     const Description = document.getElementById('inputDescription').value;
-    
+
     // Normalize Tags: Comma-separated, unique, trimmed
     const cleanedTags = (Tags || '').split(',').map(t => t.trim()).filter(t => t);
     const finalTags = [...new Set(cleanedTags)].join(', ');
@@ -777,11 +777,11 @@ function handleTransactionSubmit(e) {
       });
     }
   }
-  
+
   updateAllTags();
   markUnsavedChanges();
   if (expenseModalInstance) expenseModalInstance.hide();
-  
+
   renderTransactions();
 }
 
@@ -807,28 +807,28 @@ function showTagSuggestions(inputId, boxId) {
   const box = document.getElementById(boxId);
   const input = document.getElementById(inputId);
   const inputVal = input.value;
-  
+
   // Find the tag currently being typed (at cursor position)
   const cursorPos = input.selectionStart;
   const textBefore = inputVal.substring(0, cursorPos);
   const parts = textBefore.split(',');
   const currentPart = parts[parts.length - 1].trimStart().toLowerCase();
-  
+
   if (!currentPart || currentPart.length < 1) {
     box.classList.add('d-none');
     return;
   }
-  
-  const matches = state.allTags.filter(tag => 
-    tag.toLowerCase().startsWith(currentPart) && 
+
+  const matches = state.allTags.filter(tag =>
+    tag.toLowerCase().startsWith(currentPart) &&
     !inputVal.toLowerCase().includes(tag.toLowerCase()) // Don't suggest if already present
   ).slice(0, 5); // Limit to 5 suggestions
-  
+
   if (matches.length === 0) {
     box.classList.add('d-none');
     return;
   }
-  
+
   box.innerHTML = '';
   matches.forEach(match => {
     const item = document.createElement('button');
@@ -838,7 +838,7 @@ function showTagSuggestions(inputId, boxId) {
     item.addEventListener('click', () => applyTagSuggestion(match, inputId, boxId));
     box.appendChild(item);
   });
-  
+
   box.classList.remove('d-none');
 }
 
@@ -849,10 +849,10 @@ function applyTagSuggestion(suggestion, inputId, boxId) {
   const input = document.getElementById(inputId);
   const val = input.value;
   const cursorPos = input.selectionStart;
-  
+
   // Split entire value into tags
   const tags = val.split(',');
-  
+
   // Find which tag index the cursor is currently in
   let accumulated = 0;
   let tagIndex = 0;
@@ -865,17 +865,17 @@ function applyTagSuggestion(suggestion, inputId, boxId) {
     accumulated += 1; // Account for the comma
     tagIndex = i;
   }
-  
+
   // Replace the active tag with the suggestion
   tags[tagIndex] = (tagIndex > 0 ? ' ' : '') + suggestion;
-  
+
   // Filter out empty parts, trim each tag, then join with comma and space
   const cleanedTags = tags.map(t => t.trim()).filter(t => t);
   const finalVal = [...new Set(cleanedTags)].join(', ');
-  
+
   input.value = finalVal + (finalVal ? ', ' : '');
   input.focus();
-  
+
   document.getElementById(boxId).classList.add('d-none');
 }
 
@@ -886,10 +886,10 @@ export function showStatusMessage(message, type = 'success') {
   const statusEl = document.getElementById('currentFileName');
   const originalText = state.fileName;
   const originalClass = statusEl.className;
-  
+
   statusEl.textContent = message;
   statusEl.className = `fw-bold text-${type}`;
-  
+
   setTimeout(() => {
     statusEl.textContent = originalText;
     statusEl.className = originalClass;
