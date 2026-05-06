@@ -276,10 +276,13 @@ export async function saveFile() {
           });
           showStatusMessage("File shared/saved successfully!");
         } catch (error) {
-          if (error.name !== 'AbortError') {
-            console.error("Share failed", error);
-            fallbackDownload(csvContent, state.fileName);
+          if (error.name === 'AbortError') {
+            console.log("Share sheet cancelled by user.");
+            // Return early so we don't clear the unsaved changes warning
+            return;
           }
+          console.error("Share failed", error);
+          fallbackDownload(csvContent, state.fileName);
         }
       } else {
         fallbackDownload(csvContent, state.fileName);
