@@ -1,3 +1,14 @@
+export function isIOS() {
+  return [
+    'iPad Simulator',
+    'iPhone Simulator',
+    'iPod Simulator',
+    'iPad',
+    'iPhone',
+    'iPod'
+  ].includes(navigator.platform) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+}
+
 export const state = {
   fileHandle: null,
   fileName: '',
@@ -9,7 +20,8 @@ export const state = {
   searchQuery: '',
   allTags: [],
   isSelectionMode: false,
-  selectedIds: []
+  selectedIds: [],
+  viewOnlyMode: isIOS()
 };
 
 export function markUnsavedChanges() {

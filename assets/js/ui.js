@@ -245,6 +245,15 @@ export function setupUIEvents() {
   if (btnBulkApplyTags) {
     btnBulkApplyTags.addEventListener('click', handleBulkApplyTags);
   }
+
+  // View Only Mode Toggle
+  const btnToggleViewOnly = document.getElementById('btnToggleViewOnly');
+  if (btnToggleViewOnly) {
+    btnToggleViewOnly.addEventListener('click', () => {
+      state.viewOnlyMode = !state.viewOnlyMode;
+      renderApp();
+    });
+  }
 }
 
 /**
@@ -262,6 +271,39 @@ export function renderApp() {
     appView.classList.remove('d-none');
     navActions.classList.remove('d-none');
     currentFileName.textContent = state.fileName;
+
+    // View Only Mode specific UI handling
+    const textViewOnly = document.getElementById('textViewOnly');
+    const btnUndo = document.getElementById('btnUndoChanges');
+    const btnSave = document.getElementById('btnSaveChanges');
+    const btnToggleViewOnly = document.getElementById('btnToggleViewOnly');
+    const btnAddExpense = document.getElementById('btnAddExpense');
+    const btnSelectMode = document.getElementById('btnSelectMode');
+    const inputSearchTransaction = document.getElementById('inputSearchTransaction');
+
+    if (state.viewOnlyMode) {
+      if (textViewOnly) textViewOnly.classList.remove('d-none');
+      if (btnUndo) btnUndo.classList.add('d-none');
+      if (btnSave) btnSave.classList.add('d-none');
+      if (btnAddExpense) btnAddExpense.classList.add('d-none');
+      if (btnSelectMode) btnSelectMode.classList.add('d-none');
+      if (btnToggleViewOnly) btnToggleViewOnly.innerHTML = '<i class="bi bi-lock-fill text-warning"></i>';
+      if (inputSearchTransaction && inputSearchTransaction.parentElement) {
+         inputSearchTransaction.parentElement.classList.replace('w-100', 'w-auto'); // Adjust search bar layout
+      }
+      
+      if (state.isSelectionMode) toggleSelectionMode(false);
+    } else {
+      if (textViewOnly) textViewOnly.classList.add('d-none');
+      if (btnUndo) btnUndo.classList.remove('d-none');
+      if (btnSave) btnSave.classList.remove('d-none');
+      if (btnAddExpense) btnAddExpense.classList.remove('d-none');
+      if (btnSelectMode) btnSelectMode.classList.remove('d-none');
+      if (btnToggleViewOnly) btnToggleViewOnly.innerHTML = '<i class="bi bi-unlock-fill"></i>';
+      if (inputSearchTransaction && inputSearchTransaction.parentElement) {
+         inputSearchTransaction.parentElement.classList.replace('w-auto', 'w-100');
+      }
+    }
 
     populateCategoriesDropdown();
     updateAllTags();
@@ -385,6 +427,17 @@ export function renderTransactions() {
     emptyState.classList.add('d-none');
   }
 
+  const thActions = document.getElementById('thActions');
+  if (thActions) {
+    if (state.viewOnlyMode) {
+      thActions.classList.add('d-none');
+      thActions.classList.remove('d-md-table-cell');
+    } else {
+      thActions.classList.remove('d-none');
+      thActions.classList.add('d-md-table-cell');
+    }
+  }
+
   // Copy and sort the data based on current state parameters
   const sorted = [...filteredTransactions].sort((a, b) => {
     const col = state.sort.column;
@@ -471,10 +524,12 @@ export function renderTransactions() {
         <td class="d-none d-lg-table-cell">${t.Subcategory}</td>
         <td class="d-none d-xl-table-cell">${(t.Tags || '').split(',').filter(tag => tag.trim()).map(tag => `<span class="badge rounded-pill text-bg-light border text-dark me-1" style="font-weight: 500;">${tag.trim()}</span>`).join('')}</td>
         <td class="d-none d-xl-table-cell">${t.Notes}</td>
+        ${state.viewOnlyMode ? '' : `
         <td class="text-end text-nowrap d-none d-md-table-cell">
           <button class="btn btn-sm btn-outline-primary me-1 btn-edit ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Edit</button>
           <button class="btn btn-sm btn-outline-danger btn-del ${state.isSelectionMode ? 'd-none' : ''}" data-id="${t.id}">Del</button>
         </td>
+        `}
         
         <!-- Mobile Layout -->
         <td class="d-md-none mobile-visible w-100 p-0 border-0">
@@ -505,6 +560,7 @@ export function renderTransactions() {
   // Mobile row click
   tbody.querySelectorAll('.mobile-row-click').forEach(row => {
     row.addEventListener('click', (e) => {
+      if (state.viewOnlyMode) return; // Prevent edit on mobile in view only mode
       if (e.target.closest('button')) return; // Ignore if clicking a button inside (like desktop edit/del)
 
       const id = row.getAttribute('data-id');

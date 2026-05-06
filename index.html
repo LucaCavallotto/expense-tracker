@@ -58,7 +58,11 @@
         <span id="currentFileName" class="text-muted fw-semibold"></span>
       </div>
 
-      <div id="navActions" class="d-none">
+      <div id="navActions" class="d-none align-items-center">
+        <button id="btnToggleViewOnly" class="btn btn-outline-secondary btn-sm me-2 d-none d-md-inline-block" title="Toggle View Only Mode">
+          <i class="bi bi-unlock-fill"></i>
+        </button>
+        <span id="textViewOnly" class="badge bg-warning-subtle text-warning border border-warning-subtle me-2 d-none d-md-none" title="View Only Mode Active"><i class="bi bi-lock-fill"></i></span>
         <button id="btnUndoChanges" class="btn btn-outline-secondary btn-sm me-2" disabled>Undo Changes</button>
         <button id="btnSaveChanges" class="btn btn-outline-primary btn-sm me-2" disabled>Save Changes</button>
         <button id="btnCloseFile" class="btn btn-outline-danger btn-sm">Close File</button>
@@ -197,7 +201,7 @@
                   <th scope="col" class="d-none d-lg-table-cell">Subcategory</th>
                   <th scope="col" class="d-none d-xl-table-cell">Tags</th>
                   <th scope="col" class="d-none d-xl-table-cell">Notes</th>
-                  <th scope="col" class="text-end d-none d-md-table-cell">Actions</th>
+                  <th scope="col" class="text-end d-none d-md-table-cell" id="thActions">Actions</th>
                 </tr>
               </thead>
               <tbody id="transactionsTbody">
