@@ -51,8 +51,14 @@
   ],
   "Investments": [
     "Interest",
-    "Other",
-    "Security"
+    "Security",
+    "Stocks",
+    "ETFs",
+    "Bonds",
+    "BPF",
+    "Interests & Dividends",
+    "Fees & Commissions",
+    "Other"
   ],
   "Mixed": [
     "Expenses"
@@ -70,19 +76,22 @@
     "Gifts to Buy",
     "Home",
     "Shoes",
-    "Software"
+    "Software",
+    "Other"
   ],
   "Sports": [
     "Equipment",
     "Gym & Fitness",
-    "Karting",
-    "Other Sports",
+    "Motorsport",
     "Running",
     "Swimming",
-    "Tennis"
+    "Tennis",
+    "Other"
   ],
   "Taxes": [
-    "Tax Expenses"
+    "Tax Expenses",
+    "Investment Taxes",
+    "Other"
   ],
   "Transportation": [
     "Airline",
@@ -91,7 +100,8 @@
     "Rentals",
     "Ships",
     "Taxi",
-    "Trains"
+    "Trains",
+    "Other"
   ],
   "Travel": [
     "Accommodation",
@@ -106,6 +116,8 @@
     "Insurance & Tax",
     "Maintenance",
     "Parking",
-    "Toll Booths"
+    "Toll Booths",
+    "Fine",
+    "Other"
   ]
 }
