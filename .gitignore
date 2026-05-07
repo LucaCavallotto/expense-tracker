@@ -35,4 +35,4 @@ package-lock.json
 .env.*
 
 *.csv
-!example_data.csv
+!demo.csv
