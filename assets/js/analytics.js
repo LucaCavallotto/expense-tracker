@@ -51,8 +51,15 @@ export function renderAnalytics() {
       });
     }
 
-    // Attach Delegation for Category Toggles
+    // Attach Delegation for Category Toggles and Filter Buttons
     const toggleDelegation = (e) => {
+      const filterBtn = e.target.closest('.btn-filter-tx');
+      if (filterBtn) {
+        e.stopPropagation();
+        applyFilterAndSwitchTab(filterBtn.getAttribute('data-filter'));
+        return;
+      }
+
       const item = e.target.closest('.category-item');
       if (item) {
         const subList = item.querySelector('.subcategory-list');
@@ -480,7 +487,12 @@ function renderDetailedCategoryBreakdown(transactions, periodLabel) {
     const subcatsHtml = sortedSubcats.map(([subName, subAmt]) => `
       <div class="subcategory-item d-flex justify-content-between align-items-center">
         <span class="text-muted">${subName}</span>
-        <span class="fw-semibold">€${subAmt.toFixed(2)}</span>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-semibold">€${subAmt.toFixed(2)}</span>
+          <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-filter-tx" data-filter="${subName}" title="View Transactions" style="font-size: 0.75rem;">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
       </div>
     `).join('');
 
@@ -490,8 +502,11 @@ function renderDetailedCategoryBreakdown(transactions, periodLabel) {
           <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-start mb-1">
               <div>
-                <span class="fw-bold d-block" style="font-size: 1.1rem;">${catName}</span>
-                <span class="text-muted small">Total for ${periodLabel}</span>
+                <span class="fw-bold d-inline-block" style="font-size: 1.1rem;">${catName}</span>
+                <button class="btn btn-sm btn-link text-muted p-0 ms-1 btn-filter-tx" data-filter="${catName}" title="View Transactions">
+                  <i class="bi bi-search"></i>
+                </button>
+                <span class="text-muted small d-block">Total for ${periodLabel}</span>
               </div>
               <div class="text-end">
                 <span class="category-amount-badge text-success" style="font-size: 1.1rem; font-weight: 700;">€${catData.total.toFixed(2)}</span>
@@ -574,7 +589,12 @@ function renderDetailedIncomeBreakdown(transactions, periodLabel) {
     const subcatsHtml = sortedSubcats.map(([subName, subAmt]) => `
       <div class="subcategory-item d-flex justify-content-between align-items-center">
         <span class="text-muted">${subName}</span>
-        <span class="fw-semibold text-success">+€${subAmt.toFixed(2)}</span>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-semibold text-success">+€${subAmt.toFixed(2)}</span>
+          <button class="btn btn-sm btn-outline-secondary py-0 px-2 btn-filter-tx" data-filter="${subName}" title="View Transactions" style="font-size: 0.75rem;">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
       </div>
     `).join('');
 
@@ -584,8 +604,11 @@ function renderDetailedIncomeBreakdown(transactions, periodLabel) {
           <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-start mb-1">
               <div>
-                <span class="fw-bold d-block" style="font-size: 1.1rem;">${catName}</span>
-                <span class="text-muted small">Total for ${periodLabel}</span>
+                <span class="fw-bold d-inline-block" style="font-size: 1.1rem;">${catName}</span>
+                <button class="btn btn-sm btn-link text-muted p-0 ms-1 btn-filter-tx" data-filter="${catName}" title="View Transactions">
+                  <i class="bi bi-search"></i>
+                </button>
+                <span class="text-muted small d-block">Total for ${periodLabel}</span>
               </div>
               <div class="text-end">
                 <span class="category-amount-badge text-success" style="font-size: 1.1rem; font-weight: 700;">+€${catData.total.toFixed(2)}</span>
@@ -685,8 +708,11 @@ function renderDetailedTagsBreakdown(transactions, periodLabel) {
           <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-start mb-1">
               <div>
-                <span class="fw-bold d-block" style="font-size: 1.1rem;"><i class="bi bi-tag-fill text-info me-1 small"></i>${tagName}</span>
-                <span class="text-muted small">Net for ${periodLabel}</span>
+                <span class="fw-bold d-inline-block" style="font-size: 1.1rem;"><i class="bi bi-tag-fill text-info me-1 small"></i>${tagName}</span>
+                <button class="btn btn-sm btn-link text-muted p-0 ms-1 btn-filter-tx" data-filter="${tagName}" title="View Transactions">
+                  <i class="bi bi-search"></i>
+                </button>
+                <span class="text-muted small d-block">Net for ${periodLabel}</span>
               </div>
               <div class="text-end">
                 <span class="category-amount-badge ${netClass}" style="font-size: 1.1rem; font-weight: 700;">${netPrefix}€${tagData.net.toFixed(2)}</span>
@@ -707,4 +733,19 @@ function renderDetailedTagsBreakdown(transactions, periodLabel) {
       </div>
     `;
   }).join('');
+}
+
+/**
+ * Triggers a global search filter and switches to the transactions tab.
+ */
+function applyFilterAndSwitchTab(filterStr) {
+  state.searchQuery = filterStr.toLowerCase();
+  
+  const searchInput = document.getElementById('inputSearchTransaction');
+  if (searchInput) searchInput.value = filterStr;
+  
+  const clearBtn = document.getElementById('btnClearSearch');
+  if (clearBtn) clearBtn.classList.remove('d-none');
+  
+  document.dispatchEvent(new CustomEvent('filter-transactions-requested'));
 }

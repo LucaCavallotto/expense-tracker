@@ -163,6 +163,14 @@ export function setupUIEvents() {
     });
   });
 
+  document.addEventListener('filter-transactions-requested', () => {
+    renderTransactions();
+    const listTab = document.getElementById('list-tab');
+    if (listTab) {
+      listTab.click();
+    }
+  });
+
   const inputSearchTransaction = document.getElementById('inputSearchTransaction');
   const btnClearSearch = document.getElementById('btnClearSearch');
   if (inputSearchTransaction && btnClearSearch) {
