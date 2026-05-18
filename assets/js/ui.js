@@ -378,6 +378,16 @@ function resetForm() {
 
   const btnDelete = document.getElementById('btnDeleteTransactionModal');
   if (btnDelete) btnDelete.classList.add('d-none');
+
+  // Reset disabled states and show save button
+  const inputs = ['inputDate', 'inputTime', 'inputAmount', 'inputDescription', 'inputCategory', 'inputSubcategory', 'inputTags', 'inputNotes', 'inlineInput'];
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = false;
+  });
+  
+  const btnSave = document.getElementById('btnSaveTransaction');
+  if (btnSave) btnSave.classList.remove('d-none');
 }
 
 
@@ -560,7 +570,6 @@ export function renderTransactions() {
   // Mobile row click
   tbody.querySelectorAll('.mobile-row-click').forEach(row => {
     row.addEventListener('click', (e) => {
-      if (state.viewOnlyMode) return; // Prevent edit on mobile in view only mode
       if (e.target.closest('button')) return; // Ignore if clicking a button inside (like desktop edit/del)
 
       const id = row.getAttribute('data-id');
@@ -720,10 +729,37 @@ function editTransaction(id) {
   document.getElementById('inputTags').value = t.Tags;
   document.getElementById('inputNotes').value = t.Notes;
 
-  document.getElementById('expenseModalLabel').textContent = 'Edit Transaction';
+  if (state.viewOnlyMode) {
+    document.getElementById('expenseModalLabel').textContent = 'Transaction Details';
+    
+    // Disable inputs
+    const inputs = ['inputDate', 'inputTime', 'inputAmount', 'inputDescription', 'inputCategory', 'inputSubcategory', 'inputTags', 'inputNotes', 'inlineInput'];
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = true;
+    });
 
-  const btnDelete = document.getElementById('btnDeleteTransactionModal');
-  if (btnDelete) btnDelete.classList.remove('d-none');
+    const btnDelete = document.getElementById('btnDeleteTransactionModal');
+    if (btnDelete) btnDelete.classList.add('d-none');
+
+    const btnSave = document.getElementById('btnSaveTransaction');
+    if (btnSave) btnSave.classList.add('d-none');
+  } else {
+    document.getElementById('expenseModalLabel').textContent = 'Edit Transaction';
+    
+    // Enable inputs
+    const inputs = ['inputDate', 'inputTime', 'inputAmount', 'inputDescription', 'inputCategory', 'inputSubcategory', 'inputTags', 'inputNotes', 'inlineInput'];
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = false;
+    });
+
+    const btnDelete = document.getElementById('btnDeleteTransactionModal');
+    if (btnDelete) btnDelete.classList.remove('d-none');
+
+    const btnSave = document.getElementById('btnSaveTransaction');
+    if (btnSave) btnSave.classList.remove('d-none');
+  }
 
   if (expenseModalInstance) expenseModalInstance.show();
 }
