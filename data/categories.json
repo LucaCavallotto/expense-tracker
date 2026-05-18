@@ -1,21 +1,25 @@
 {
   "Bar": [
-    "Aperitifs",
+    "Aperitif",
     "Beer",
     "Breakfast",
     "Coffee",
-    "Drinks",
+    "Drink",
     "Gelato",
-    "Mixed orders",
-    "Snacks",
+    "Mixed Order",
+    "Snack",
     "Soda"
   ],
   "Bills": [
     "Phone & Internet",
-    "Subscription"
+    "Subscriptions"
   ],
   "Entertainment": [
-    "Books/Music/Subscriptions",
+    "Books",
+    "Magazines",
+    "Newspapers",
+    "Music",
+    "Subscriptions",
     "Clubs",
     "Films/Concerts/Museums/Events",
     "Hobbies",
@@ -23,7 +27,10 @@
     "Parties"
   ],
   "Fines": [
-    "Fine Expenses"
+    "Traffic",
+    "Administrative",
+    "Late Fees",
+    "Other"
   ],
   "Food & Dining": [
     "Canteen",
@@ -41,16 +48,21 @@
   "Income": [
     "Family",
     "Freelance",
-    "Gift",
+    "Gifts",
     "Reimbursement",
     "Salary",
     "Sales"
   ],
   "Insurance": [
-    "Insurance Expenses"
+    "Health",
+    "Life",
+    "Home",
+    "Travel",
+    "Professional",
+    "Other"
   ],
   "Investments": [
-    "Security",
+    "Securities",
     "Stocks",
     "ETFs",
     "Bonds",
@@ -59,15 +71,13 @@
     "Fees & Commissions",
     "Other"
   ],
-  "Mixed": [
-    "Expenses"
-  ],
   "Other": [
     "Charity",
     "Debts & Credits",
     "Missing",
     "One-off",
-    "Uncategorized"
+    "Uncategorized",
+    "Mixed"
   ],
   "Shopping": [
     "Clothes & Accessories",
@@ -88,18 +98,19 @@
     "Other"
   ],
   "Taxes": [
-    "Tax Expenses",
+    "Income Taxes",
     "Investment Taxes",
+    "State Taxes",
     "Other"
   ],
   "Transportation": [
     "Airline",
-    "Buses",
+    "Bus",
     "Public Transport",
-    "Rentals",
-    "Ships",
+    "Rental",
+    "Ship",
     "Taxi",
-    "Trains",
+    "Train",
     "Other"
   ],
   "Travel": [
@@ -109,14 +120,13 @@
     "Tours",
     "Transport"
   ],
-  "Vehicle": [
+  "Vehicles": [
     "Car Payment & Lease",
     "Fuel",
     "Insurance & Tax",
     "Maintenance",
     "Parking",
     "Toll Booths",
-    "Fine",
     "Other"
   ]
 }
