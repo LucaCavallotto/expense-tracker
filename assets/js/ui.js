@@ -1,4 +1,4 @@
-import { state, markUnsavedChanges } from './app.js';
+import { state, markUnsavedChanges, normalizeTags } from './app.js';
 import { renderAnalytics } from './analytics.js';
 
 const categoryMap = {
@@ -522,7 +522,7 @@ export function renderTransactions() {
         <td class="d-none d-md-table-cell">${t.Description}</td>
         <td class="d-none d-lg-table-cell"><span class="badge bg-secondary">${t.Category || 'Uncategorized'}</span></td>
         <td class="d-none d-lg-table-cell">${t.Subcategory}</td>
-        <td class="d-none d-xl-table-cell">${(t.Tags || '').split(',').filter(tag => tag.trim()).map(tag => `<span class="badge rounded-pill text-bg-light border text-dark me-1" style="font-weight: 500;">${tag.trim()}</span>`).join('')}</td>
+        <td class="d-none d-xl-table-cell">${(t.Tags || '').split(/\s+/).filter(tag => tag.trim()).map(tag => `<span class="badge rounded-pill text-bg-light border text-dark me-1" style="font-weight: 500;">${tag.trim()}</span>`).join('')}</td>
         <td class="d-none d-xl-table-cell">${t.Notes}</td>
         ${state.viewOnlyMode ? '' : `
         <td class="text-end text-nowrap d-none d-md-table-cell">
@@ -670,16 +670,17 @@ function handleBulkApplyTags() {
   const tagsInput = document.getElementById('bulkTagsInput').value;
   if (!tagsInput || state.selectedIds.length === 0) return;
 
-  const newTags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
-  if (newTags.length === 0) return;
+  const normalizedNewTags = normalizeTags(tagsInput);
+  if (!normalizedNewTags) return;
 
-  if (confirm(`Add ${newTags.length} tag(s) to ${state.selectedIds.length} transactions?`)) {
+  const newTagsList = normalizedNewTags.split(/\s+/);
+
+  if (confirm(`Add ${newTagsList.length} tag(s) to ${state.selectedIds.length} transactions?`)) {
     const idsToUpdate = new Set(state.selectedIds);
     state.transactions.forEach(t => {
       if (idsToUpdate.has(t.id)) {
-        let existingTags = (t.Tags || '').split(',').map(tg => tg.trim()).filter(tg => tg);
-        const combined = [...new Set([...existingTags, ...newTags])];
-        t.Tags = combined.join(', ');
+        const combinedString = (t.Tags || '') + ' ' + normalizedNewTags;
+        t.Tags = normalizeTags(combinedString);
       }
     });
 
@@ -769,7 +770,7 @@ function handleTransactionSubmit(e) {
 
   const Category = document.getElementById('inputCategory').value || 'Uncategorized';
   const Subcategory = document.getElementById('inputSubcategory').value || '';
-  const Tags = document.getElementById('inputTags').value;
+  const Tags = normalizeTags(document.getElementById('inputTags').value);
   const Notes = document.getElementById('inputNotes').value;
 
   if (!id && lines.length > 1) {
@@ -809,15 +810,11 @@ function handleTransactionSubmit(e) {
     const Amount = parseFloat(document.getElementById('inputAmount').value) || 0;
     const Description = document.getElementById('inputDescription').value;
 
-    // Normalize Tags: Comma-separated, unique, trimmed
-    const cleanedTags = (Tags || '').split(',').map(t => t.trim()).filter(t => t);
-    const finalTags = [...new Set(cleanedTags)].join(', ');
-
     if (id) {
       // Perform Edit
       const index = state.transactions.findIndex(t => t.id === id);
       if (index !== -1) {
-        state.transactions[index] = { id, DateTime: isoDateTime, Amount, Description, Category, Subcategory, Tags: finalTags, Notes };
+        state.transactions[index] = { id, DateTime: isoDateTime, Amount, Description, Category, Subcategory, Tags: Tags, Notes };
       }
     } else {
       // Perform Add
@@ -828,7 +825,7 @@ function handleTransactionSubmit(e) {
         Description,
         Category,
         Subcategory,
-        Tags: finalTags,
+        Tags: Tags,
         Notes
       });
     }
@@ -848,7 +845,7 @@ function updateAllTags() {
   const tagsSet = new Set();
   state.transactions.forEach(t => {
     if (t.Tags) {
-      t.Tags.split(',').forEach(tag => {
+      t.Tags.split(/\s+/).forEach(tag => {
         if (tag.trim()) tagsSet.add(tag.trim());
       });
     }
@@ -867,18 +864,22 @@ function showTagSuggestions(inputId, boxId) {
   // Find the tag currently being typed (at cursor position)
   const cursorPos = input.selectionStart;
   const textBefore = inputVal.substring(0, cursorPos);
-  const parts = textBefore.split(',');
-  const currentPart = parts[parts.length - 1].trimStart().toLowerCase();
+  const parts = textBefore.split(/[\s,]+/);
+  const currentPart = parts[parts.length - 1].trim().toLowerCase();
 
-  if (!currentPart || currentPart.length < 1) {
+  if (!currentPart || currentPart === '#') {
     box.classList.add('d-none');
     return;
   }
 
-  const matches = state.allTags.filter(tag =>
-    tag.toLowerCase().startsWith(currentPart) &&
-    !inputVal.toLowerCase().includes(tag.toLowerCase()) // Don't suggest if already present
-  ).slice(0, 5); // Limit to 5 suggestions
+  // Get the search query without the leading '#' for matching
+  const matchQuery = currentPart.startsWith('#') ? currentPart.substring(1) : currentPart;
+
+  const matches = state.allTags.filter(tag => {
+    const rawTag = tag.startsWith('#') ? tag.substring(1) : tag;
+    return rawTag.toLowerCase().startsWith(matchQuery) &&
+      !inputVal.toLowerCase().includes(tag.toLowerCase());
+  }).slice(0, 5); // Limit to 5 suggestions
 
   if (matches.length === 0) {
     box.classList.add('d-none');
@@ -906,31 +907,29 @@ function applyTagSuggestion(suggestion, inputId, boxId) {
   const val = input.value;
   const cursorPos = input.selectionStart;
 
-  // Split entire value into tags
-  const tags = val.split(',');
-
-  // Find which tag index the cursor is currently in
-  let accumulated = 0;
-  let tagIndex = 0;
-  for (let i = 0; i < tags.length; i++) {
-    accumulated += tags[i].length;
-    if (cursorPos <= accumulated) {
-      tagIndex = i;
-      break;
-    }
-    accumulated += 1; // Account for the comma
-    tagIndex = i;
+  // Find the start and end indices of the word currently being typed at the cursor position
+  let start = cursorPos;
+  while (start > 0 && !/[\s,]/.test(val[start - 1])) {
+    start--;
   }
 
-  // Replace the active tag with the suggestion
-  tags[tagIndex] = (tagIndex > 0 ? ' ' : '') + suggestion;
+  let end = cursorPos;
+  while (end < val.length && !/[\s,]/.test(val[end])) {
+    end++;
+  }
 
-  // Filter out empty parts, trim each tag, then join with comma and space
-  const cleanedTags = tags.map(t => t.trim()).filter(t => t);
-  const finalVal = [...new Set(cleanedTags)].join(', ');
+  // Replace the word between start and end with the selected suggestion (with '#' prefix)
+  const cleanSuggestion = suggestion.startsWith('#') ? suggestion : '#' + suggestion;
+  const newVal = val.substring(0, start) + cleanSuggestion + ' ' + val.substring(end);
 
-  input.value = finalVal + (finalVal ? ', ' : '');
+  // Normalize newVal
+  const finalVal = normalizeTags(newVal);
+
+  input.value = finalVal + (finalVal ? ' ' : '');
   input.focus();
+
+  // Position cursor at the end
+  input.selectionStart = input.selectionEnd = input.value.length;
 
   document.getElementById(boxId).classList.add('d-none');
 }

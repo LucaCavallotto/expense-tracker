@@ -54,7 +54,7 @@ The application expects a CSV file with the following header and column order:
 - **Amount:** (Required) Numeric value. Use negative for expenses and positive for income.
 - **Description:** (Required) A brief text about the transaction.
 - **Category / Subcategory:** Used for organization and filtering.
-- **Tags:** Comma-separated labels.
+- **Tags:** Space-separated labels starting with `#` (e.g., `#holiday #travel`).
 - **Notes:** Additional multi-line text details.
 
 When you use **"Create New File"**, the app automatically generates a file with these headers for you.

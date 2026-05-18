@@ -627,7 +627,7 @@ function renderDetailedTagsBreakdown(transactions, periodLabel) {
 
   transactions.forEach(t => {
     if (t.Tags && t.Tags.trim()) {
-      const tags = t.Tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      const tags = t.Tags.split(/\s+/).map(tag => tag.trim()).filter(tag => tag);
       const absAmt = Math.abs(t.Amount);
       
       tags.forEach(tag => {

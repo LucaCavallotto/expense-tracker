@@ -1,4 +1,4 @@
-import { state, clearUnsavedChanges } from './app.js';
+import { state, clearUnsavedChanges, normalizeTags } from './app.js';
 import { renderApp, showStatusMessage } from './ui.js';
 
 const REQUIRED_HEADERS = ["DateTime", "Amount", "Description", "Category", "Subcategory", "Tags", "Notes"];
@@ -225,7 +225,7 @@ function parseCSV(csvText) {
         Description: row.Description || '',
         Category: row.Category || '',
         Subcategory: row.Subcategory || '',
-        Tags: row.Tags || '',
+        Tags: normalizeTags(row.Tags || ''),
         Notes: row.Notes || ''
       };
     } catch (e) {

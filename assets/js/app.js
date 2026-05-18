@@ -24,6 +24,24 @@ export const state = {
   viewOnlyMode: isIOS()
 };
 
+export function normalizeTags(tagsString) {
+  if (!tagsString) return '';
+  // Split by commas and/or any whitespace (covers both old and new formats)
+  const parts = tagsString.split(/[\s,]+/);
+  const cleanTags = [];
+  parts.forEach(part => {
+    // Remove all leading '#' characters to get the raw word
+    let clean = part.replace(/^#+/, '').trim();
+    if (clean) {
+      // Ensure no spaces inside the tag name
+      clean = clean.replace(/\s+/g, '');
+      cleanTags.push('#' + clean);
+    }
+  });
+  return [...new Set(cleanTags)].join(' ');
+}
+
+
 export function markUnsavedChanges() {
   state.hasUnsavedChanges = true;
   const warning = document.getElementById('unsavedWarning');

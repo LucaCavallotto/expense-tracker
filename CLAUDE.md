@@ -98,3 +98,5 @@ The program expects a specific column order for CSV compatibility:
 - **Date Handling:** `parseInlineDate` handles both standard `YYYY-MM-DD` and full ISO timestamps (detecting time automatically).
 - **Mobile Compatibility:** File saving on iOS/iPadOS is restrictive; "View Only Mode" is used as a safety fallback to prevent confusing save prompts or accidental data loss on mobile devices.
 - **Analytics Performance:** Hierarchical breakdowns use interactive "Show More" toggles to maintain performance and UI cleanliness when dealing with large numbers of categories or tags.
+- **Tag System:** Tags are space-separated and prefixed with `#` (e.g. `#holiday #travel`). Old comma-separated CSV files are automatically migrated to this format upon loading to maintain seamless backwards compatibility.
+
